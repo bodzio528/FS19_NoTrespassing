@@ -1,28 +1,25 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="51">
-	<author>Bodzio528</author>
-	
+    <author>Bodzio528 / Triple F</author>
     <version>1.0.0.0</version>
-    
-	<title>
+    <title>
         <en>No Trespassing</en>
+        <pl>Zakaz wjazdu</pl>
     </title>
-    
-	<description>
+    <description>
         <en><![CDATA[Simple mod that adds penalty for destroying NPS's crops]]></en>
         <pl><![CDATA[Koniec z bezkarnym zajeżdżaniem pola sąsiada. Zepsułeś? Zapłacisz - od razu.]]></pl>
     </description>
-    
-	<iconFilename>icon.dds</iconFilename>
     <multiplayer supported="false"/>
-	
-	<extraSourceFiles>	
-		<sourceFile filename="register.lua" /> 
-	</extraSourceFiles>
+    <iconFilename>icon.dds</iconFilename>
+
+    <extraSourceFiles>
+        <sourceFile filename="register.lua" />
+    </extraSourceFiles>
 
     <l10n filenamePrefix="translations/" />
 
-	<actions/>
+    <actions/>
     <inputBinding/>
     <storeItems/>
 </modDesc>
