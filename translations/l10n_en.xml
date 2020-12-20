@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<l10n>
+    <translationContributors>Bodzio528</translationContributors>
+    <texts>
+        <text name="warning_trespassing" text="Leave property immediately!" />
+        <text name="warning_penalty" text="Crops destroyed!" />
+        <text name="Cost" text="Koszt" />
+    </texts>
+</l10n>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<l10n>
+    <translationContributors>Bodzio528</translationContributors>
+    <texts>
+        <text name="warning_trespassing" text="Uwaga, wkraczasz na czyiś teren!" />
+        <text name="warning_penalty" text="Plony uległy zniszczeniu." />
+        <text name="cost" text="Koszt" />
+    </texts>
+</l10n>
