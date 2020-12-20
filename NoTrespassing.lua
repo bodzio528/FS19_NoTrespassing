@@ -35,10 +35,7 @@ function NoTrespassing.registerEventListeners(vehicleType)
 end
 
 function NoTrespassing:onLoad(savegame)
-    print("NoTrespassing:onLoad()"..tostring(self:getActiveFarm()))
-
-    self.lastPrintTime = 0
-    self.dt = 0
+    print("NoTrespassing:onLoad()")
 
     self.penalty = 0
     self.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
@@ -156,19 +153,6 @@ function NoTrespassing:onUpdateTick(dt)
             end
         end
 
-        if self.lastPrintTime < 0 then
-            self.lastPrintTime = 10000
-            
-            local isOnField = wheel.densityType ~= 0
-            local depth = wheel.lastColor[4]
-            local color1 = wheel.lastColor[1]
-            local color2 = wheel.lastColor[2]
-            local color3 = wheel.lastColor[3]
-            local terrainAttribute = wheel.lastTerrainAttribute
-
-        end
-        self.lastPrintTime = self.lastPrintTime - dt
-
         --[[ TODO: ADDITIONAL WHEELS ATTACHED ]]--
     end
 end
@@ -218,7 +202,8 @@ function getCropTypeCoeff(x, z) -- send fruits immune to damage there instead of
             if "SUGARCANE" == fruitDesc.fruitName then 
                 return 0.5 * getGrowthStateCoeff(fruitDesc, state) 
             end
-            if "POTATOE"  == fruitDesc.fruitName or "SUGARBEET" == fruitDesc.fruitName then 
+            if "POTATOE"  == fruitDesc.fruitName or
+                "SUGARBEET" == fruitDesc.fruitName then 
                 return 0.75 * getGrowthStateCoeff(fruitDesc, state) 
             end
             if "SUNFLOWER" == fruitDesc.fruitName then
@@ -242,6 +227,6 @@ function getTyreBaseDamage(wheel, dt, speed)
         return 0.0
     end
 
-    -- todo: base it on travelled distance, where distance = speed * dt
+    -- base is travelled distance, where distance = speed * dt
     return wheel.width * dt * speed / 365.25
 end
