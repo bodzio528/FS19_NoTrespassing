@@ -5,6 +5,9 @@
     <title>
         <en>No Trespassing</en>
         <pl>Zakaz wjazdu</pl>
+        <de>Kein Einlass</de>
+        <fr>Entrée interdite</fr>
+        <es>No hay entrada</es>
     </title>
     <description>
         <en><![CDATA[Simple mod that adds penalty for destroying NPS's crops]]></en>
