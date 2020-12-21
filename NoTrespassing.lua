@@ -3,24 +3,38 @@
 No Trespassing Mod
 
 Author: bodzio528
-Version: 0.1-private
+Version: 0.1
 Created: 2020-12-16
 
 Changelog:
 2020-12-16 initial version
 ]]
 
-local modDirectory = g_currentModDirectory
-local modName = g_currentModName
-
 NoTrespassing = {}
 
 NoTrespassing.PENALTY_COOLDOWN = 5000.0 -- five seconds between paying compensation
-NoTrespassing.MISSION_COOLDOWN = 5000.0 -- fve seconds cooldown after entering active mission (no penalty)
 NoTrespassing.WARNING_VISIBILITY_TIME = 5000.0
-NoTrespassing.WARNING_TRESPASSING = 1
-NoTrespassing.WARNING_PENALTY = 2
-NoTrespassing.COST = "Total" -- g_i18n:getText("cost")
+
+local NoTrespassing_MT = Class(NoTrespassing)
+
+function NoTrespassing:new(mission, modDirectory, modName, i18n)
+    local self = {}
+    setmetatable(self, NoTrespassing_MT)
+
+    self.isServer = mission:getIsServer()
+    self.isClient = mission:getIsClient()
+
+    -- merge mod translations --
+    local gi18nTextRef = getfenv(0).g_i18n.texts
+    for key, text in pairs(i18n.texts) do
+        gi18nTextRef[key] = text
+    end
+
+    return self
+end
+
+function NoTrespassing:delete()
+end
 
 function NoTrespassing.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(Enterable, specializations) and SpecializationUtil.hasSpecialization(Motorized, specializations) and SpecializationUtil.hasSpecialization(Drivable, specializations)
@@ -28,132 +42,123 @@ end
 
 function NoTrespassing.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onLoad", NoTrespassing)
- --   SpecializationUtil.registerEventListener(vehicleType, "onUpdate", NoTrespassing) -- runs every frame (dt=16.67ms@60Hz)
-    SpecializationUtil.registerEventListener(vehicleType, "onUpdateTick", NoTrespassing)
-    SpecializationUtil.registerEventListener(vehicleType, "onEnterVehicle", NoTrespassing)
-    SpecializationUtil.registerEventListener(vehicleType, "onLeaveVehicle", NoTrespassing)
+    SpecializationUtil.registerEventListener(vehicleType, "onReadStream", NoTrespassing)
+    SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", NoTrespassing)
+    SpecializationUtil.registerEventListener(vehicleType, "onUpdate", NoTrespassing)
 end
 
 function NoTrespassing:onLoad(savegame)
-    print("NoTrespassing:onLoad()")
+    local spec = self.spec_noTrespassing
 
-    self.penalty = 0
-    self.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
-    self.totalPenalty = 0
+    spec.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
 
-    self.missionCooldown = -1
+    spec.penalty = 0
+    spec.totalPenalty = 0
 
-    self.isPlayerInside = false
+    spec.isPlayerInside = false
 
-    self.currentWarning = 0
-    self.warnings = {}
-    self.warnings[NoTrespassing.WARNING_TRESPASSING] = "You do not own this land!" --g_i18n:getText("warning_trespassing")
-    self.warnings[NoTrespassing.WARNING_PENALTY] = "Crops destroyed!" --g_i18n:getText("warning_penalty")
+    spec.displayWarning = false
 end
 
-function NoTrespassing:onEnterVehicle(isControlling)
-    if not self.isServer then 
-        return 
-    end
 
-    if isControlling then
-        self.isPlayerInside = true
-    end
+function NoTrespassing:onReadStream(streamId, connection)
 end
 
-function NoTrespassing:onLeaveVehicle()
-    if not self.isServer then 
-        return 
-    end
-
-    self.isPlayerInside = false
+function NoTrespassing:onWriteStream(streamId, connection)
 end
 
 function NoTrespassing:onUpdate(dt)
-end
-
-function NoTrespassing:onUpdateTick(dt)
-    if self.isClient and self:getIsActiveForInput(true) then
-        if self.currentWarning > 0 then
-            local cost = ""
-            if self.totalPenalty > 0 then
-                cost = string.format(" %s: ", NoTrespassing.COST) .. tostring(math.floor(self.totalPenalty))
-            end
-            g_currentMission:showBlinkingWarning(self.warnings[self.currentWarning] .. cost, NoTrespassing.WARNING_VISIBILITY_TIME)
-            self.currentWarning = 0
-        else
-            self.totalPenalty = 0
-        end
-    end
-
-    if not self.isServer then 
-        return 
-    end
-
     if not g_currentMission.missionInfo.fruitDestruction then
-        -- player disabled crop damage in options, so why bother
+        -- player disabled crop damage in options, so why bother --
         return
     end
 
-    if not self.isPlayerInside then
+    if not self.spec_enterable.isEntered then
+        -- only inflict damage if someone is inside vehicle --
         return
     end
-
-    -- call deduce penalty from bank account --
-    self.penaltyCooldown = self.penaltyCooldown - dt
-    if self.penalty > 0 and self.penaltyCooldown < 0 then
-        local farmId = self:getOwnerFarmId() 
-        local stats = g_farmManager:getFarmById(g_currentMission.player.farmId).stats 
-        stats:updateStats("expenses", self.penalty) 
-        g_currentMission:addMoney(-self.penalty, farmId, MoneyType.TRANSFER)
-
-        self.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
-        self.penalty = 0
-    end
-
-    -- derease mission cooldown to avoid frequent search in mission manager (big, ugly, messy... pain to watch CPU performance dying here)
-    self.missionCooldown = self.missionCooldown - dt
-    if self.missionCooldown > 0 then return end
 
     local spec = self.spec_noTrespassing
 
+    if self.isClient and self:getIsActiveForInput(true) then
+        -- print visible warning on screen --
+        -- this is client-side function --
+        if spec.displayWarning then
+            if spec.totalPenalty > 0 then
+                local text = string.format("%s (%s: %.0f)",
+                                           g_i18n:getText("noTrespassing_warning_penalty"), 
+                                           g_i18n:getText("noTrespassing_total_cost_label"), 
+                                           math.floor(spec.totalPenalty))
+                g_currentMission:showBlinkingWarning(text, NoTrespassing.WARNING_VISIBILITY_TIME)
+            end
+            spec.displayWarning = false
+        else
+            spec.totalPenalty = 0
+        end
+    end
+
+    if self.isServer then
+        -- call deduce penalty from bank account --
+        spec.penaltyCooldown = spec.penaltyCooldown - dt
+        if spec.penalty > 0 and spec.penaltyCooldown < 0 then
+            local farmId = self:getOwnerFarmId() 
+            local stats = g_farmManager:getFarmById(g_currentMission.player.farmId).stats 
+            stats:updateStats("expenses", spec.penalty) 
+            g_currentMission:addMoney(-spec.penalty, farmId, MoneyType.TRANSFER)
+
+            spec.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
+            spec.penalty = 0
+        end
+    end
+
+    local penalty = 0 -- variable for storing penalty for all wheels
     for k, wheel in pairs(self:getWheels()) do
-        if self:getIsWheelFoliageDestructionAllowed(wheel) then -- this function disables AI helper crop destruction
+        if self:getIsWheelFoliageDestructionAllowed(wheel) then -- this function checks AI helper drivinf over crops
             local width = 0.5 * wheel.width
             local length = math.min(0.5, 0.5 * wheel.width)
             local x, _, z = localToLocal(wheel.driveNode, wheel.repr, 0, 0, 0)
 
-            local x0, y0, z0 = localToWorld(wheel.repr, x + width, 0, z - length)
-
-            local mission = g_missionManager:getMissionAtWorldPosition(x0, z0)
-            if mission ~= nil and mission.farmId == self:getActiveFarm() then
-                self.missionCooldown = NoTrespassing.MISSION_COOLDOWN
-                return
-            end
+            local x0, y0, z0 = localToWorld(wheel.repr, x + width, 0, z - length) -- world coordinates of wheel center
 
             local farmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(x0, z0)
             local farmland = g_farmlandManager:getFarmlandById(farmlandId)
 
-            if farmland ~= nil then
-                local farmlandOwnerId = g_farmlandManager:getFarmlandOwner(farmlandId)
-                if farmlandOwnerId == FarmlandManager.NO_OWNER_FARM_ID then
-                    self.currentWarning = math.max(self.currentWarning, NoTrespassing.WARNING_TRESPASSING)
-                    local isOnField = wheel.densityType ~= 0
-                    if isOnField then
-                        local penalty = getTyreBaseDamage(wheel, dt, self:getLastSpeed()) * getCropTypeCoeff(x0, z0)
-                        if penalty > 0 then
-                            self.penalty = self.penalty + penalty
-                            self.totalPenalty = self.totalPenalty + penalty
-                            self.currentWarning = NoTrespassing.WARNING_PENALTY
-                        end
-                    end
+            if farmland == nil then
+                -- at least one wheel has contact with road - no damage (eg. driving wide combine harvesters) --
+                return
+            end
+
+            if farmland.isOwned then
+                -- drop procedure for owned fields --
+                return
+            end
+
+            for f, field in pairs(g_fieldManager.farmlandIdFieldMapping[farmlandId]) do
+                local mission = g_missionManager.fieldToMission[field.fieldId]
+                if mission ~= nil and mission.farmId == self:getActiveFarm() then
+                    -- field with active mission, stop --
+
+                    spec.currentWarning = 0
+                    spec.totalPenalty = 0
+                    spec.penalty = 0
+
+                    return
                 end
-            else
-                return -- at least one wheel has contact with road - no damage (eg. wide combine harvesters)
+            end
+
+            local isOnField = wheel.densityType ~= 0
+            if isOnField then
+                penalty = penalty + getTyreBaseDamage(wheel, dt, self:getLastSpeed()) * getCropTypeCoeff(x0, z0)
             end
         end
 
-        --[[ TODO: ADDITIONAL WHEELS ATTACHED ]]--
+        --[[ TODO: ADDITIONAL WHEELS ]]--
+    end
+
+    if penalty > 0 then
+        spec.penalty = spec.penalty + penalty
+        spec.totalPenalty = spec.totalPenalty + penalty
+        spec.displayWarning = true
     end
 end
 
@@ -202,8 +207,7 @@ function getCropTypeCoeff(x, z) -- send fruits immune to damage there instead of
             if "SUGARCANE" == fruitDesc.fruitName then 
                 return 0.5 * getGrowthStateCoeff(fruitDesc, state) 
             end
-            if "POTATOE"  == fruitDesc.fruitName or
-                "SUGARBEET" == fruitDesc.fruitName then 
+            if "POTATOE"  == fruitDesc.fruitName or "SUGARBEET" == fruitDesc.fruitName then 
                 return 0.75 * getGrowthStateCoeff(fruitDesc, state) 
             end
             if "SUNFLOWER" == fruitDesc.fruitName then
@@ -227,6 +231,10 @@ function getTyreBaseDamage(wheel, dt, speed)
         return 0.0
     end
 
-    -- base is travelled distance, where distance = speed * dt
+    -- todo: base it on travelled distance, where distance = speed * dt
     return wheel.width * dt * speed / 365.25
+end
+
+function NoTrespassing.installSpecializations(vehicleTypeManager, specializationManager, modDirectory, modName)
+
 end

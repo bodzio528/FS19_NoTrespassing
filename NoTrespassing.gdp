@@ -7,5 +7,5 @@
     <gameSourceVersion>Farming_Simulator_19-1.7.1.0</gameSourceVersion>
     <launchWorkingDirectory>D:/Epic Games/FarmingSimulator19/</launchWorkingDirectory>
     <launchExecutable>D:/Epic Games/FarmingSimulator19/FarmingSimulator2019.exe</launchExecutable>
-    <launchParameters></launchParameters>
+    <launchParameters>-restart  -autoStartSavegameId 3</launchParameters>
 </giantsDebuggerProject>

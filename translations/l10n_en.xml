@@ -2,8 +2,7 @@
 <l10n>
     <translationContributors>Bodzio528</translationContributors>
     <texts>
-        <text name="warning_trespassing" text="Leave property immediately!" />
-        <text name="warning_penalty" text="Crops destroyed!" />
-        <text name="Cost" text="Koszt" />
+        <text name="noTrespassing_warning_penalty" text="Crops destroyed" />
+        <text name="noTrespassing_total_cost_label" text="Koszt" />
     </texts>
 </l10n>

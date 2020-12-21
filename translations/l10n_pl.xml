@@ -2,8 +2,7 @@
 <l10n>
     <translationContributors>Bodzio528</translationContributors>
     <texts>
-        <text name="warning_trespassing" text="Uwaga, wkraczasz na czyiś teren!" />
-        <text name="warning_penalty" text="Plony uległy zniszczeniu." />
-        <text name="cost" text="Koszt" />
+        <text name="noTrespassing_warning_penalty" text="Plony uległy zniszczeniu" />
+        <text name="noTrespassing_total_cost_label" text="Koszt" />
     </texts>
 </l10n>
