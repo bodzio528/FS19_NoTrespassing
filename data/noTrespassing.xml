@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<noTrespassing>
+    <difficulty easy="0.75" normal="1.0" hard="1.5"/>
+    <ground base="0.3"/>
+    <crops>
+        <crop name="BARLEY"        base="0.90" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
+        <crop name="OAT"           base="1.10" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
+        <crop name="WHEAT"         base="1.00" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
+        <crop name="CANOLA"        base="1.25" seed="0.1" young="0.8" mature="1.0" harvested="0.1"/>
+        <crop name="MAIZE"         base="0.80" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
+        <crop name="SOYBEAN"       base="1.10" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
+        <crop name="SUNFLOWER"     base="1.10" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
+        <crop name="POTATO"        base="0.25" seed="0.3" young="0.5" mature="0.2" harvested="0.0"/>
+        <crop name="SUGARBEET"     base="0.50" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
+        <crop name="POPLAR"        base="0.30" seed="0.4" young="0.6" mature="1.0" harvested="0.3"/>
+        <crop name="GRASS"         base="0.30" seed="0.0" young="0.2" mature="0.5" harvested="0.0"/>
+        <crop name="OILSEEDRADISH" base="0.10" seed="1.0" young="1.0" mature="1.0" harvested="0.0"/>
+        <crop name="WEED"          base="0.00" seed="0.0" young="0.0" mature="0.0" harvested="0.0"/>
+        <crop name="DRYGRASS"      base="0.00" seed="0.0" young="0.0" mature="0.0" harvested="0.0"/>
+        <crop name="SUGARCANE"     base="0.35" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
+        <crop name="COTTON"        base="0.60" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
+    </crops>
+</noTrespassing>

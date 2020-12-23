@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<l10n>
+    <texts>
+        <text name="noTrespassing_warning_penalty" text="Cultivos destruidos" />
+        <text name="noTrespassing_total_cost_label" text="Costo" />
+    </texts>
+</l10n>

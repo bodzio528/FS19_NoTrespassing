@@ -4,24 +4,24 @@
     <version>1.0.0.0</version>
     <title>
         <en>No Trespassing</en>
-        <pl>Zakaz wjazdu</pl>
+        <pl>Zakaz przejazdu</pl>
         <de>Kein Einlass</de>
         <fr>Entrée interdite</fr>
         <es>No hay entrada</es>
     </title>
     <description>
-        <en><![CDATA[Simple mod that adds penalty for destroying NPS's crops]]></en>
+        <en><![CDATA[Introduce penalty for destroying NPC's crops]]></en>
         <pl><![CDATA[Koniec z bezkarnym zajeżdżaniem pola sąsiada. Zepsułeś? Zapłacisz - od razu.]]></pl>
+        <de><![CDATA[Führen Sie eine Strafe für die Zerstörung der Ernte des NPC ein]]></de>
+        <fr><![CDATA[Introduire une pénalité pour la destruction des récoltes de PNJ]]></fr>
+        <es><![CDATA[Introducir una penalización por destruir cultivos NPC]]></es>
     </description>
-    <multiplayer supported="false"/>
     <iconFilename>icon.dds</iconFilename>
-
-    <extraSourceFiles>
-        <sourceFile filename="register.lua" />
+    <multiplayer supported="false"/>
+    <extraSourceFiles>	
+        <sourceFile filename="register.lua" /> 
     </extraSourceFiles>
-
-    <l10n filenamePrefix="translations/" />
-
+    <l10n filenamePrefix="translations/l10n" />
     <actions/>
     <inputBinding/>
     <storeItems/>
