@@ -1,23 +1,27 @@
-<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <noTrespassing>
     <difficulty easy="0.75" normal="1.0" hard="1.5"/>
-    <ground base="0.3"/>
+    <!-- penalty = area * groundCoeff if cultivated or withered -->
+    <ground base="1.0"/>
     <crops>
-        <crop name="BARLEY"        base="0.90" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
-        <crop name="OAT"           base="1.10" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
-        <crop name="WHEAT"         base="1.00" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
-        <crop name="CANOLA"        base="1.25" seed="0.1" young="0.8" mature="1.0" harvested="0.1"/>
-        <crop name="MAIZE"         base="0.80" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
-        <crop name="SOYBEAN"       base="1.10" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
-        <crop name="SUNFLOWER"     base="1.10" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
-        <crop name="POTATO"        base="0.25" seed="0.3" young="0.5" mature="0.2" harvested="0.0"/>
-        <crop name="SUGARBEET"     base="0.50" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
-        <crop name="POPLAR"        base="0.30" seed="0.4" young="0.6" mature="1.0" harvested="0.3"/>
-        <crop name="GRASS"         base="0.30" seed="0.0" young="0.2" mature="0.5" harvested="0.0"/>
-        <crop name="OILSEEDRADISH" base="0.10" seed="1.0" young="1.0" mature="1.0" harvested="0.0"/>
-        <crop name="WEED"          base="0.00" seed="0.0" young="0.0" mature="0.0" harvested="0.0"/>
-        <crop name="DRYGRASS"      base="0.00" seed="0.0" young="0.0" mature="0.0" harvested="0.0"/>
-        <crop name="SUGARCANE"     base="0.35" seed="0.1" young="0.5" mature="1.0" harvested="0.1"/>
-        <crop name="COTTON"        base="0.60" seed="0.1" young="0.5" mature="1.0" harvested="0.0"/>
+        <!-- penalty = area * base * maturityCoeff if not harvested
+             penalty = area * harvestedCoeff -->             
+        <!--                    av.yield/ha ( maturity coefficients ) harvestedCoeff -->
+        <crop name="BARLEY"     base="3.70" young="0.5" mature="1.0" harvested="0.1"/>
+        <crop name="CANOLA"     base="1.95" young="0.8" mature="2.0" harvested="0.1"/>
+        <crop name="COTTON"     base="3.20" young="0.5" mature="1.0" harvested="0.0"/>
+        <crop name="DRYGRASS"   base="0.00" young="0.0" mature="0.0" harvested="0.0"/>
+        <crop name="GRASS"      base="3.80" young="0.2" mature="0.5" harvested="0.0"/>
+        <crop name="MAIZE"      base="12.4" young="0.33" mature="0.65" harvested="0.0"/>
+        <crop name="OAT"        base="2.33" young="0.5" mature="1.4" harvested="0.1"/>
+        <crop name="OILSEEDRADISH" base="1.00" young="1.0" mature="1.0" harvested="0.0"/>
+        <crop name="POPLAR"     base="5.30" young="0.75" mature="1.0" harvested="0.3"/>
+        <crop name="POTATO"     base="50.0" young="0.15" mature="0.1" harvested="0.0"/>
+        <crop name="SOYBEAN"    base="2.80" young="0.75" mature="1.0" harvested="0.1"/>
+        <crop name="SUGARBEET"  base="24.5" young="0.25" mature="0.35" harvested="0.0"/>
+        <crop name="SUGARCANE"  base="9.20" young="0.5" mature="0.9" harvested="0.1"/>
+        <crop name="SUNFLOWER"  base="1.80" young="0.85" mature="1.0" harvested="0.0"/>
+        <crop name="WEED"       base="0.00" young="0.0" mature="0.0" harvested="0.0"/>
+        <crop name="WHEAT"      base="4.32" young="0.5" mature="1.0" harvested="0.1"/>
     </crops>
 </noTrespassing>

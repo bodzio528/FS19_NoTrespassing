@@ -16,7 +16,7 @@ NoTrespassing = {}
 
 NoTrespassing.PENALTY_COOLDOWN = 5000.0 -- five seconds between paying compensation
 NoTrespassing.WARNING_DISPLAY_TIME = 3000.0
-NoTrespassing.UPDATE_INTERVAL_MS = 100.0 -- 1/10th second between penalty calculations
+NoTrespassing.UPDATE_INTERVAL_MS = 250.0 -- 1/4 second between penalty calculations
 NoTrespassing.AREA_COEFFICIENT = 1.0 / 8192 -- this constant holds average real-world area to in-game units conversion (23355.5)
 
 function NoTrespassing.prerequisitesPresent(specializations)
@@ -48,6 +48,8 @@ function NoTrespassing:onLoad(savegame)
     spec.displayWarning = false
 
     spec.seasons = g_seasons ~= nil
+
+    DebugUtil.printTableRecursively(g_currentMission.densityMapModifiers, "D", 0, 3, nil)
 end
 
 
@@ -103,6 +105,9 @@ function NoTrespassing:onUpdate(dt)
             stats:updateStats("expenses", spec.penalty) 
             g_currentMission:addMoney(-spec.penalty, farmId, MoneyType.TRANSFER)
 
+            -- update statistics --
+            g_noTrespassingMod.statistics.total = g_noTrespassingMod.statistics.total + spec.penalty
+
             spec.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
             spec.penalty = 0
         end
@@ -148,16 +153,11 @@ function NoTrespassing:onUpdate(dt)
                 -- distance... --
                 local ds = self:getLastSpeed() * dt
 
-                -- ...wheel properties... --
+                -- ...wheel width... --
                 local tyreDamageCoeff = getTyreDamage(wheel)
 
-                -- ...ground properties... --
-                local cropDamageCoeff = 0.0
-                if spec.seasons then
-                    cropDamageCoeff = getCropDamageSeasons(x0, z0)
-                else
-                    cropDamageCoeff = getCropDamage(x0, z0)
-                end
+                -- ...and ground properties... --
+                local cropDamageCoeff = getCropDamage(x0, z0)
 
                 -- ...by your powers combined, here I am... --
                 penalty = penalty + ds * tyreDamageCoeff * cropDamageCoeff
@@ -195,204 +195,53 @@ function getTyreDamage(wheel)
     return wheel.width
 end
 
-local l_cachedFruitType = nil
-
-function setCachedFruitType(fruit)
-    l_cachedFruitType = fruit
-end
-
-function getCachedFruitType()
-    return l_cachedFruitType
-end
-
-function clearCachedFruitType()
-    l_cachedFruitType = nil
-end
-
-function getFruitAt(x, z)
-    print(string.format("start getFruiTypeIndexAt(x=%f, y=%f)", x, z))
-
-	local widthX = widthX or 0.5;
-	local widthZ = widthZ or 0.5;
-
-	local density = 0;
-	local totalArea = 0
-
-    if getCachedFruitType() ~= nil then
-        local cachedFruitType = getCachedFruitType()
-        if cachedFruitType.index ~= FruitType.UNKNOWN then
-            local minGrowthState, maxGrowthState = 1, cachedFruitType.numGrowthStates
-
-            density, totalArea = FieldUtil.getFruitArea(x, z, x - widthX, z - widthZ, x + widthX, z + widthZ, 
-                                                        {},                     -- terrainDetailRequiredValueRanges
-                                                        {},                     -- terrainDetailProhibitValueRanges
-                                                        cachedFruitType.index,  -- requiredFruitType
-                                                        minGrowthState,         -- requiredMinGrowthState
-                                                        maxGrowthState,         -- requiredMaxGrowthState
-                                                        0,                      -- prohibitedFruitType
-                                                        0,                      -- prohibitedMinGrowthState
-                                                        0,                      -- prohibitedMaxGrowthState
-                                                        false)                  -- useWindrowed
-            if density > 0 then
-                print(string.format("end getFruiTypeIndexAt(x=%f, y=%f) return [cached] fruitType=%s density=%d totalArea=%f", x, z, cachedFruitType.name, density, totalArea))
-                return cachedFruitType, density, totalArea
-            end
-        end
-    end
-
-    -- clear cache --
-    clearCachedFruitType()
-
-	local maxDensity = 0;
-	local maxFruitType = 0
-
-    for i = 1, #g_fruitTypeManager.fruitTypes do
-        if i ~= g_fruitTypeManager.nameToIndex['GRASS'] 
-            and i ~= g_fruitTypeManager.nameToIndex['DRYGRASS'] 
-            and i ~= g_fruitTypeManager.nameToIndex['WEED'] 
-            and i ~= g_fruitTypeManager.nameToIndex["SEMIDRY_GRASS_WINDROW"] then 
-
-            local fruitType = g_fruitTypeManager.fruitTypes[i]
-            local minGrowthState, maxGrowthState = 1, fruitType.numGrowthStates
-
-            density, totalArea = FieldUtil.getFruitArea(x, z, x - widthX, z - widthZ, x + widthX, z + widthZ, 
-                                                        {},                 -- terrainDetailRequiredValueRanges
-                                                        {},                 -- terrainDetailProhibitValueRanges
-                                                        i,                  -- requiredFruitType
-                                                        minGrowthState,     -- requiredMinGrowthState
-                                                        maxGrowthState,     -- requiredMaxGrowthState
-                                                        0,                  -- prohibitedFruitType
-                                                        0,                  -- prohibitedMinGrowthState
-                                                        0,                  -- prohibitedMaxGrowthState
-                                                        false)              -- useWindrowed
-            -- minimax algorithm to get most frequent crop type on on probed area --
-            if density > maxDensity then
-                maxDensity = density
-                maxFruitType = i
-            end
-        end
-    end
-
-    if maxDensity > 0 then
-        local fruitType = g_fruitTypeManager.fruitTypes[maxFruitType]
-
-        -- I can save a whole lot of effort by caching last encountered fruit before exit --
-        -- but doing so lifts function purity --
-        setCachedFruitType(fruitType)
-
-        print(string.format("end getFruiTypeIndexAt(x=%f, y=%f) return fruitType=%s density=%d totalArea=%f", x, z, fruitType.name, density, totalArea))
-        return fruitType, maxDensity, totalArea
-    end
-        
-    print(string.format("end getFruiTypeIndexAt(x=%f, y=%f) return fruitType=nil density=0 totalArea=0", x, z))
-    return nil, 0, 0
-end
-
-function getCropDamageSeasons(x, z)
+function getCropDamage(x, z)
     print(string.format("start getCropDamageSeasons(x=%f, y=%f)", x, z))
-    
-    local data = g_noTrespassingMod.data
 
-    local fruitType, density, totalArea = getFruitAt(x, z)
-    DebugUtil.printTableRecursively(fruitType, "-", 0, 2, nil)
---[[
     local modifier = g_currentMission.densityMapModifiers.cutFruitArea.modifier
     for index, fruit in pairs(g_currentMission.fruits) do
         local fruitDesc = g_fruitTypeManager:getFruitTypeByIndex(index)
-        
-        modifier:resetDensityMapAndChannels(fruit.id, fruitDesc.startStateChannel, fruitDesc.numStateChannels)
-        local d = 0.125 -- ori 0.5
-        modifier:setParallelogramWorldCoords(x - d, z - d, 2*d,0, 0,2*d, "pvv")
+        if fruitDesc.name ~= "WEED" then
+            modifier:resetDensityMapAndChannels(fruit.id, fruitDesc.startStateChannel, fruitDesc.numStateChannels)
+            modifier:setParallelogramWorldCoords(x - 0.5, z - 0.5, 1,0, 0,1, "pvv")
 
-        local area, totalArea, xyz = modifier:executeGet()
-        if area > 0 then
-            local state = area / totalArea   
-            print(string.format(
-                "FRUIT_DESC TABLE area=%f totalArea=%f xyz=%f state=%f", 
-                area, totalArea, xyz, state))
+            local area, totalArea, _ = modifier:executeGet()
+            if area > 0 then
+                local state = area / totalArea
+                print(string.format("FRUIT DESC TABLE area=%f / totalArea=%f == state=%f", area, totalArea, state))
+                print(string.format("FRUIT DESC TABLE state=%d minForage=%d minHarvesting=%d maxHarvesting=%d withering=%d cut=%d", 
+                                    state, 
+                                    fruitDesc.minForageGrowthState,
+                                    fruitDesc.minHarvestingGrowthState,
+                                    fruitDesc.maxHarvestingGrowthState,
+                                    fruitDesc.witheringNumGrowthStates,
+                                    fruitDesc.cutState))
 
-            DebugUtil.printTableRecursively(fruitDesc, "-", 0, 2, nil)
-            print("FRUIT_DESC TABLE END")
+                if fruitDesc.witheringNumGrowthStates <= state then
+                    print(string.format("getCropDamageSeasons(%f, %f) %s WITHERED=%f", x, z, fruitDesc.name, g_noTrespassingMod.data.ground))
+                    return g_noTrespassingMod.data.ground
+                end
+
+                local coeffs = g_noTrespassingMod.data.crops[fruitDesc.name]
+
+                if fruitDesc.cutState <= state then
+                    print(string.format("getCropDamageSeasons(%f, %f) %s HARVESTED=%f", x, z, fruitDesc.name, coeffs["harvested"]))
+                    return coeffs["harvested"]
+                end
+
+                if fruitDesc.minForageGrowthState <= state and state <= fruitDesc.maxHarvestingGrowthState then
+                    print(string.format("getCropDamageSeasons(%f, %f) %s MATURE=%f", x, z, fruitDesc.name, coeffs["mature"]))
+                    return coeffs["base"] * coeffs["mature"]
+                end
+
+                if state <= fruitDesc.minForageGrowthState then
+                    print(string.format("getCropDamageSeasons(%f, %f) %s YOUNG=%f", x, z, fruitDesc.name, coeffs["young"]))
+                    return coeffs["base"] * coeffs["young"]
+                end
+            end
         end
     end
---]]
-    print(string.format("end getCropDamageSeasons(x=%f, y=%f)", x, z))
-    return 1.0
+
+    print(string.format("getCropDamageSeasons(%f, %f) GROUND=%f", x, z, g_noTrespassingMod.data.ground))
+    return g_noTrespassingMod.data.ground
 end
-
-function getCropDamage(x, z)
-    print(string.format("start getCropDamage(x=%f, y=%f)", x, z))
-
-
-    print("end getCropDamage()")
-    return 1.0
-end
-
---function getGrowthStateCoeff(fruitDesc, state)
---    if fruitDesc.destruction == nil then 
---        return 0.0
---    end
---
---    if state == fruitDesc.destruction.state then
---        return 0.01 --tiny fee for harvested ground
---    end
---
---    if state < fruitDesc.destruction.filterStart then
---        return 0.25 -- fee for driving over first germination stages (sowed and germinated)
---    end
---
---    return 1.0
---end
---
---function getCropTypeCoeff(x, z) -- send fruits immune to damage there instead of calculating
---    local difficultyIdx = (self.mission.missionInfo.economicDifficulty or self.mission.missionInfo.difficulty)
---    local data = g_noTrespassingMod.data
---    print(string.format("getCropTypeCoeff (%f;%f) difficultyCoeff=%f", x, z, data.difficulty[difficultyIdx]))
---
---    local modifier = g_currentMission.densityMapModifiers.cutFruitArea.modifier
---    for index, fruit in pairs(g_currentMission.fruits) do
---        local fruitDesc = g_fruitTypeManager:getFruitTypeByIndex(index)
---
---        modifier:resetDensityMapAndChannels(fruit.id, fruitDesc.startStateChannel, fruitDesc.numStateChannels)
---        modifier:setParallelogramWorldCoords(x - 0.5, z - 0.5, 1,0, 0,1, "pvv")
---
---        local area, totalArea, _ = modifier:executeGet()
---        if area > 0 then
---            local state = area / totalArea
---            if "WEED" == fruitDesc.fruitName then 
---                return 0.0 
---            end
---            if "GRASS" == fruitDesc.fruitName then 
---                return 0.2
---            end 
---            if "SUGARCANE" == fruitDesc.fruitName then 
---                return 0.5 * getGrowthStateCoeff(fruitDesc, state) 
---            end
---            if "POTATO"  == fruitDesc.fruitName or "SUGARBEET" == fruitDesc.fruitName then 
---                return 0.75 * getGrowthStateCoeff(fruitDesc, state) 
---            end
---            if "SUNFLOWER" == fruitDesc.fruitName then
---                return 1.25 * getGrowthStateCoeff(fruitDesc, state) 
---            end
---            if "CANOLA" == fruitDesc.fruitName then
---                return 1.5
---            end
---            return 1.0 * getGrowthStateCoeff(fruitDesc, state)
---        end
---    end
---    return 1.0
---end
---
---function getTyreBaseDamage(wheel, dt, speed)
---    if wheel.isCareWheel then
---        return 0.0 -- narrow tires do not inflict damage to crops
---    end
---
---    if speed < 0.1 then
---        return 0.0
---    end
---
---    -- todo: base it on travelled distance, where distance = speed * dt
---    return wheel.width * dt * speed / 365.25
---end
---
