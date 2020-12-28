@@ -211,6 +211,9 @@ function getCropDamage(x, z)
                 end
 
                 local coeffs = g_noTrespassingMod.data.crops[fruitDesc.name]
+                if coeffs == nil then
+                    coeffs = g_noTrespassingMod.data.crops["BARLEY"]
+                end
 
                 if fruitDesc.cutState <= state then
                     return coeffs["harvested"]
