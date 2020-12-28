@@ -22,12 +22,11 @@ local function isEnabled() return
 end
 
 NoTrespassingMod = {}
-NoTrespassingMod.MY_CONSTANT = 20.0
+NoTrespassingMod.STATISTICS_TOTAL = "noTrespassing.statistics#total"
 
 local NoTrespassingMod_MT = Class(NoTrespassingMod)
 
 function NoTrespassingMod:new(mission, modDirectory, modName, i18n)
-    print(string.format("%s", "NoTrespassingMod:new()"))
     local self = setmetatable({}, NoTrespassingMod_MT)
 
     self.mission = mission
@@ -37,6 +36,9 @@ function NoTrespassingMod:new(mission, modDirectory, modName, i18n)
 
     self.modDirectory = modDirectory
     self.modName = modName
+    
+    -- statistics --
+    self.statistics = { total = 0.0 }
 
     -- merge mod translations --
     local i18nRefGlobal = getfenv(0).g_i18n.texts
@@ -44,37 +46,22 @@ function NoTrespassingMod:new(mission, modDirectory, modName, i18n)
         i18nRefGlobal[key] = text
     end
     
-    print("NO_TRESPASSING LOAD XML DATA START")
     self:loadCropsData()
-
-    DebugUtil.printTableRecursively(self.data, "+", 0, 3, nil)
-    print("NO_TRESPASSING XML DATA DUMP END")
-
-    self.statistics = { total = 0.0 }
     
     return self
 end
 
 function NoTrespassingMod:delete()
-    print(string.format("%s", "NoTrespassingMod:delete()"))
 end
 
 function NoTrespassingMod:onMissionLoadFromSavegame(xmlFile)
-    -- load some statistics
-    print("NoTrespassingMod:onMissionLoadFromSavegame(xmlFile)")
-
-    local statsTotalKey = "noTrespassing.statistics#total"
     if hasXMLProperty(xmlFile, statsTotalKey) then
-        self.statistics.total = getXMLFloat(xmlFile, statsTotalKey)
-        print(string.format("%s: loadedMission() STATISTICS TOTAL=%f", modName, self.statistics.total))
+        self.statistics.total = getXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL)
     end
 end
 
 function NoTrespassingMod:onMissionSaveToSavegame(xmlFile)
-    -- save some statistics
-    print(string.format("NoTrespassingMod:onMissionSaveToSavegame(xmlFile) STATISTICS=%f", self.statistics.total))
-
-    setXMLFloat(xmlFile, "noTrespassing.statistics#total", self.statistics.total)
+    setXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL, self.statistics.total)
 end
 
 function NoTrespassingMod:loadCropsData()
@@ -98,13 +85,20 @@ function NoTrespassingMod:loadCropsDataFromXml(xmlFile)
             getXMLFloat(xmlFile, difficultyKey .. "#hard")
         }
     end
-
+    
+    data.ground = 1.0 -- sane defaults if xml is corrupted
     local groundKey = "noTrespassing.ground"
     if hasXMLProperty(xmlFile, groundKey) then
         data.ground = getXMLFloat(xmlFile, groundKey .. "#base")
     end
         
-    data.crops = {}
+    data.crops = {} -- sane defaults if xml is corrupted
+    data.crops["BARLEY"] = {
+        base=3.70,
+        young=0.5,
+        mature=1.0,
+        harvested=0.1
+    }
 
     local i = 0
     while true do
@@ -134,8 +128,6 @@ function NoTrespassingMod:loadCropsDataFromXml(xmlFile)
 end
 
 function NoTrespassingMod.installSpecializations(vehicleTypeManager, specializationManager, modDirectory, modName)
-    print(string.format("%s", "NoTrespassingMod.installSpecializations()"))
-
     specializationManager:addSpecialization("noTrespassing", "NoTrespassing", Utils.getFilename("NoTrespassing.lua", modDirectory), nil)
 
     for vehicleName, vehicleType in pairs(vehicleTypeManager:getVehicleTypes()) do
@@ -146,7 +138,6 @@ function NoTrespassingMod.installSpecializations(vehicleTypeManager, specializat
             
         if isDrivable and isEnterable and isMotorized and not isSplineVehicle then
             vehicleTypeManager:addSpecialization(vehicleName, modName .. ".noTrespassing")
-            print(string.format("%s: spec noTrespassing added to vehicle %s", "NoTrespassingMod.installSpecializations()", vehicleName))
         end
     end
 end
@@ -167,33 +158,9 @@ function init()
 --    -- Networking
 --    SavegameSettingsEvent.readStream = Utils.appendedFunction(SavegameSettingsEvent.readStream, readStream)
 --    SavegameSettingsEvent.writeStream = Utils.appendedFunction(SavegameSettingsEvent.writeStream, writeStream)
---
---    StoreItemUtil.getConfigurationsFromXML = Utils.overwrittenFunction(StoreItemUtil.getConfigurationsFromXML, addConfigurations)
-
---    VehicleTypeManager.validateVehicleTypes = Utils.prependedFunction(VehicleTypeManager.validateVehicleTypes, validateVehicleTypes)
---    if g_specializationManager:getSpecializationByName("noTrespassing") == nil then
---        local status = g_specializationManager:addSpecialization("noTrespassing", "NoTrespassing", Utils.getFilename("NoTrespassing.lua", modDirectory), true, nil)
---
---        if status then
---            print(string.format("%s: install specialization noTrespassing status=%s", modName, tostring(status)))
---        end
---
---        for vehicleName, vehicleType in pairs(g_vehicleTypeManager.vehicleTypes) do
---            local isDrivable = SpecializationUtil.hasSpecialization(Drivable, vehicleType.specializations)
---            local isEnterable = SpecializationUtil.hasSpecialization(Enterable, vehicleType.specializations)
---            local isMotorized = SpecializationUtil.hasSpecialization(Motorized, vehicleType.specializations)
---            local isSplineVehicle = SpecializationUtil.hasSpecialization(SplineVehicle, vehicleType.specializations)
---                
---            if isDrivable and isEnterable and isMotorized and not isSplineVehicle then
---                g_vehicleTypeManager:addSpecialization(vehicleName, "noTrespassing")
---                print(string.format("%s: spec noTrespassing added to vehicle %s",  modName, vehicleName))
---            end
---        end
---    end
 end
 
 function loadMission(mission)
-    print(string.format("%s: loadMission()", modName))
     assert(g_noTrespassingMod == nil)
 
     noTrespassingMod = NoTrespassingMod:new(mission, modDirectory, modName, g_i18n)
@@ -202,8 +169,6 @@ function loadMission(mission)
 end
 
 function loadedMission(mission, node)
-    print(string.format("%s: loadedMission()", modName))
-
     if mission:getIsServer() then
         if mission.missionInfo.savegameDirectory ~= nil and fileExists(mission.missionInfo.savegameDirectory .. "/noTrespasing.xml") then
             local xmlFile = loadXMLFile("NoTrespassingXML", mission.missionInfo.savegameDirectory .. "/noTrespasing.xml")
@@ -219,8 +184,6 @@ function loadedMission(mission, node)
 end
 
 function unload()
-    print(string.format("%s: unload()", modName))
-
     removeModEventListener(noTrespassingMod)
 
     noTrespassingMod:delete()
@@ -229,8 +192,6 @@ function unload()
 end
 
 function saveToXMLFile(missionInfo)
-    print(string.format("%s: saveToXMLFile()", modName))
-
     if missionInfo.isValid then
         local xmlFile = createXMLFile("NoTrespassingXML", missionInfo.savegameDirectory .. "/noTrespasing.xml", "noTrespassing")
         if xmlFile ~= nil then
@@ -242,17 +203,13 @@ function saveToXMLFile(missionInfo)
 end
 
 function readStream(e, streamId, connection)
-    print(string.format("%s: readStream()", modName))
 end
 
 function writeStream(e, streamId, connection) 
-    print(string.format("%s: writeStream()", modName))
 end
 
 -- hooks --
 function validateVehicleTypes(vehicleTypeManager)
-    print(string.format("%s: validateVehicleTypes()", modName))
-
     NoTrespassingMod.installSpecializations(g_vehicleTypeManager, g_specializationManager, modDirectory, modName)
 end
 

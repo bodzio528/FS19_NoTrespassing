@@ -196,8 +196,6 @@ function getTyreDamage(wheel)
 end
 
 function getCropDamage(x, z)
-    print(string.format("start getCropDamageSeasons(x=%f, y=%f)", x, z))
-
     local modifier = g_currentMission.densityMapModifiers.cutFruitArea.modifier
     for index, fruit in pairs(g_currentMission.fruits) do
         local fruitDesc = g_fruitTypeManager:getFruitTypeByIndex(index)
@@ -208,40 +206,25 @@ function getCropDamage(x, z)
             local area, totalArea, _ = modifier:executeGet()
             if area > 0 then
                 local state = area / totalArea
-                print(string.format("FRUIT DESC TABLE area=%f / totalArea=%f == state=%f", area, totalArea, state))
-                print(string.format("FRUIT DESC TABLE state=%d minForage=%d minHarvesting=%d maxHarvesting=%d withering=%d cut=%d", 
-                                    state, 
-                                    fruitDesc.minForageGrowthState,
-                                    fruitDesc.minHarvestingGrowthState,
-                                    fruitDesc.maxHarvestingGrowthState,
-                                    fruitDesc.witheringNumGrowthStates,
-                                    fruitDesc.cutState))
-
                 if fruitDesc.witheringNumGrowthStates <= state then
-                    print(string.format("getCropDamageSeasons(%f, %f) %s WITHERED=%f", x, z, fruitDesc.name, g_noTrespassingMod.data.ground))
                     return g_noTrespassingMod.data.ground
                 end
 
                 local coeffs = g_noTrespassingMod.data.crops[fruitDesc.name]
 
                 if fruitDesc.cutState <= state then
-                    print(string.format("getCropDamageSeasons(%f, %f) %s HARVESTED=%f", x, z, fruitDesc.name, coeffs["harvested"]))
                     return coeffs["harvested"]
                 end
 
                 if fruitDesc.minForageGrowthState <= state and state <= fruitDesc.maxHarvestingGrowthState then
-                    print(string.format("getCropDamageSeasons(%f, %f) %s MATURE=%f", x, z, fruitDesc.name, coeffs["mature"]))
                     return coeffs["base"] * coeffs["mature"]
                 end
 
                 if state <= fruitDesc.minForageGrowthState then
-                    print(string.format("getCropDamageSeasons(%f, %f) %s YOUNG=%f", x, z, fruitDesc.name, coeffs["young"]))
                     return coeffs["base"] * coeffs["young"]
                 end
             end
         end
     end
-
-    print(string.format("getCropDamageSeasons(%f, %f) GROUND=%f", x, z, g_noTrespassingMod.data.ground))
     return g_noTrespassingMod.data.ground
 end
