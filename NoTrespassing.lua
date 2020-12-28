@@ -48,8 +48,6 @@ function NoTrespassing:onLoad(savegame)
     spec.displayWarning = false
 
     spec.seasons = g_seasons ~= nil
-
-    DebugUtil.printTableRecursively(g_currentMission.densityMapModifiers, "D", 0, 3, nil)
 end
 
 
