@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <l10n>
-    <translationContributors>Bodzio528</translationContributors>
     <texts>
         <text name="noTrespassing_warning_penalty" text="Crops destroyed" />
         <text name="noTrespassing_total_cost_label" text="Koszt" />
