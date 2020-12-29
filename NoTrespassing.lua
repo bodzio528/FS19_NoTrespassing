@@ -123,13 +123,18 @@ function NoTrespassing:onUpdate(dt)
             local farmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(x0, z0)
             local farmland = g_farmlandManager:getFarmlandById(farmlandId)
 
-            if farmland == nil then
+            if farmland == nil or farmlandId == 0 then
                 -- at least one wheel has contact with road - no damage (eg. driving wide combine harvesters) --
                 return
             end
 
             if farmland.isOwned then
                 -- drop procedure for owned fields --
+                return
+            end
+            
+            if g_fieldManager.farmlandIdFieldMapping == nil or g_fieldManager.farmlandIdFieldMapping[farmlandId] == nil then
+                -- error on Wola Brudnowska map --
                 return
             end
 
