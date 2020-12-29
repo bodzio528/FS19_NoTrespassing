@@ -55,7 +55,7 @@ function NoTrespassingMod:delete()
 end
 
 function NoTrespassingMod:onMissionLoadFromSavegame(xmlFile)
-    if hasXMLProperty(xmlFile, statsTotalKey) then
+    if hasXMLProperty(xmlFile, NoTrespassingMod.STATISTICS_TOTAL) then
         self.statistics.total = getXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL)
     end
 end
