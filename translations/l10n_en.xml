@@ -2,6 +2,6 @@
 <l10n>
     <texts>
         <text name="noTrespassing_warning_penalty" text="Crops destroyed" />
-        <text name="noTrespassing_total_cost_label" text="Koszt" />
+        <text name="noTrespassing_total_cost_label" text="Penalty" />
     </texts>
 </l10n>
