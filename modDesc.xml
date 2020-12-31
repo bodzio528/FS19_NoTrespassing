@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="51">
+<modDesc descVersion="53">
     <author>Bodzio528 / Triple F</author>
     <version>1.0.0.0</version>
     <title>
         <en>No Trespassing</en>
-        <pl>Zakaz przejazdu</pl>
+        <pl>Zakaz Przejazdu</pl>
         <de>Kein Einlass</de>
-        <fr>Entrée interdite</fr>
-        <es>No hay entrada</es>
+        <fr>Entrée Interdite</fr>
+        <es>No Hay Entrada</es>
     </title>
     <description>
         <en><![CDATA[Introduce penalty for destroying NPC's crops]]></en>
