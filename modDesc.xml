@@ -3,16 +3,16 @@
     <author>Bodzio528 / Triple F</author>
     <version>1.0.0.0</version>
     <title>
-        <en>No Trespassing</en>
+        <en>NPC Pays For Fruitdestruction</en>
         <pl>Zakaz Przejazdu</pl>
-        <de>Kein Einlass</de>
+        <de>NPC Muss für Fruchtzerstörung Bezahlen</de>
         <fr>Entrée Interdite</fr>
         <es>No Hay Entrada</es>
     </title>
     <description>
         <en><![CDATA[Introduce penalty for destroying NPC's crops]]></en>
         <pl><![CDATA[Koniec z bezkarnym zajeżdżaniem pola sąsiada. Zepsułeś? Zapłacisz - od razu.]]></pl>
-        <de><![CDATA[Führen Sie eine Strafe für die Zerstörung der Ernte des NPC ein]]></de>
+        <de><![CDATA[Führen Sie eine Strafe für die Zerstörung der Ernte durch den NPC ein]]></de>
         <fr><![CDATA[Introduire une pénalité pour la destruction des récoltes de PNJ]]></fr>
         <es><![CDATA[Introducir una penalización por destruir cultivos NPC]]></es>
     </description>

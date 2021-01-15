@@ -19,6 +19,8 @@ NoTrespassing.WARNING_DISPLAY_TIME = 3000.0
 NoTrespassing.UPDATE_INTERVAL_MS = 250.0 -- 1/4 second between penalty calculations
 NoTrespassing.AREA_COEFFICIENT = 1.0 / 8192 -- this constant holds average real-world area to in-game units conversion (23355.5)
 
+NoTrespassing.DEBUG = 1
+
 function NoTrespassing.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(Enterable, specializations) 
         and SpecializationUtil.hasSpecialization(Motorized, specializations)
