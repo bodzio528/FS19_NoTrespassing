@@ -3,11 +3,11 @@
     <author>Bodzio528 / Triple F</author>
     <version>1.0.0.0</version>
     <title>
-        <en>NPC Pays For Fruitdestruction</en>
-        <pl>Zakaz Przejazdu</pl>
-        <de>NPC Muss für Fruchtzerstörung Bezahlen</de>
-        <fr>Entrée Interdite</fr>
-        <es>No Hay Entrada</es>
+        <en>Player Pays For Crop Destruction</en>
+        <de>Spieler Muss für Fruchtzerstörung Bezahlen</de>
+        <pl>Zapłać Za Zniszczone Plony</pl>
+        <fr>Pénalité Pour La Destruction Des Récoltes</fr>
+        <es>Penalización Por Destruir Cultivos</es>
     </title>
     <description>
         <en><![CDATA[Introduce penalty for destroying NPC's crops]]></en>
