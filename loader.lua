@@ -1,8 +1,8 @@
 --[[
 
-NoTrespassingMod.lua
+loader.lua
 
-This is file with NoTrespassingMod metatable (class) definition.
+This is file with NoTrespassing mod initialization functions.
 
 Author: bodzio528
 Version: 0.1
@@ -11,18 +11,27 @@ Created: 2020-12-22
 Changelog:
 2020-12-22 initial version
 2020-12-28 merge with register function file
+2021-01-30 rewrite loader function, cleanup the code
 ]]
+
+local debugActive = false
 
 local modName = g_currentModName
 local modDirectory = g_currentModDirectory
 
-local noTrespassingMod = nil
-local function isEnabled() return 
-    noTrespassingMod ~= nil 
+local function getIsMultiplayerGame()
+    if g_dedicatedServerInfo ~= nil then
+        return true
+    end
+
+    if g_careerScreen ~= nil then
+        return g_careerScreen.isMultiplayer or debugActive
+    end
+
+    return true
 end
 
-NoTrespassingMod = {}
-NoTrespassingMod.STATISTICS_TOTAL = "noTrespassing.statistics#total"
+local STATISTICS_TOTAL = "noTrespassing.statistics#total"
 
 local NoTrespassingMod_MT = Class(NoTrespassingMod)
 

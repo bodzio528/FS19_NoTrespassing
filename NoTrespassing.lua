@@ -19,8 +19,6 @@ NoTrespassing.WARNING_DISPLAY_TIME = 3000.0
 NoTrespassing.UPDATE_INTERVAL_MS = 250.0 -- 1/4 second between penalty calculations
 NoTrespassing.AREA_COEFFICIENT = 1.0 / 8192 -- this constant holds average real-world area to in-game units conversion (23355.5)
 
-NoTrespassing.DEBUG = 1
-
 function NoTrespassing.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(Enterable, specializations) 
         and SpecializationUtil.hasSpecialization(Motorized, specializations)
@@ -32,7 +30,7 @@ function NoTrespassing.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onLoad", NoTrespassing)
     SpecializationUtil.registerEventListener(vehicleType, "onReadStream", NoTrespassing)
     SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", NoTrespassing)
-    SpecializationUtil.registerEventListener(vehicleType, "onUpdate", NoTrespassing)
+    SpecializationUtil.registerEventListener(vehicleType, "onUpdateTick", NoTrespassing)
 end
 
 function NoTrespassing:onLoad(savegame)
@@ -46,20 +44,41 @@ function NoTrespassing:onLoad(savegame)
     spec.totalPenalty = 0
 
     spec.isPlayerInside = false
-
     spec.displayWarning = false
-
-    spec.seasons = g_seasons ~= nil
 end
 
 
 function NoTrespassing:onReadStream(streamId, connection)
+    print(string.format("NoTrespassing:onReadStream(streamId=%s, connection=%s)", tostring(streamId), tostring(connection)))
+
+    local spec = Vehicle:getNoTrespassingSpec()
+    if streamReadBool(streamId) then
+        spec.isPlayerInside = streamReadBool(streamId)
+      --spec.currentWarning = streamReadBool(streamId)
+      --spec.displayWarning = streamReadBool(streamId)
+        spec.dt = streamReadFloat32(streamId)
+        spec.penalty = streamReadFloat32(streamId)
+        spec.penaltyCooldown = streamReadFloat32(streamId)
+        spec.totalPenalty = streamReadFloat32(streamId)
+    end
 end
 
 function NoTrespassing:onWriteStream(streamId, connection)
+    print(string.format("NoTrespassing:onWriteStream(streamId=%s, connection=%s)", tostring(streamId), tostring(connection)))
+
+    local spec = Vehicle:getNoTrespassingSpec()
+    if streamWriteBool(streamId, spec.totalPenalty > 0) then
+        streamWriteBool(streamId, spec.isPlayerInside)
+        --streamWriteBool(streamId, spec.currentWarning)
+        --streamWriteBool(streamId, spec.displayWarning)
+        streamWriteFloat32(streamId, spec.dt)
+        streamWriteFloat32(streamId, spec.penalty)
+        streamWriteFloat32(streamId, spec.penaltyCooldown)
+        streamWriteFloat32(streamId, spec.totalPenalty)
+    end
 end
 
-function NoTrespassing:onUpdate(dt)
+function NoTrespassing::onUpdateTick(dt, isActiveForInput, isActiveForInputIgnoreSelection, isSelected)
     -- todo: find a way to call this function less frequently --
     local spec = self:getNoTrespassingSpec()
     dt = spec.dt + dt
@@ -111,6 +130,12 @@ function NoTrespassing:onUpdate(dt)
             spec.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
             spec.penalty = 0
         end
+
+        -------------------------------------- E-OP
+        if not self.isClient then
+            return
+        end
+        -------------------------------------- E-E-E-E-OP
     end
 
     local penalty = 0 -- variable for storing penalty for all wheels
@@ -183,15 +208,6 @@ function NoTrespassing:onUpdate(dt)
         spec.displayWarning = true
     end
 end
-
-function NoTrespassing:onWriteStream(streamId, connection)
-    print(string.format("%s", "NoTrespassing:onWriteStream(streamId, connection)"))
-end
-
-function NoTrespassing:onReadStream(streamId, connection)
-    print(string.format("%s", "NoTrespassing:onReadStream(streamId, connection)"))
-end
-
 
 function getTyreDamage(wheel)
     -- local data = g_noTrespassingMod.data
