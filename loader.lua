@@ -14,40 +14,28 @@ Changelog:
 2021-01-30 rewrite loader function, cleanup the code
 ]]
 
-local debugActive = false
-
 local modName = g_currentModName
 local modDirectory = g_currentModDirectory
 
-local function getIsMultiplayerGame()
-    if g_dedicatedServerInfo ~= nil then
-        return true
-    end
+local function onStartMission(mission)
 
-    if g_careerScreen ~= nil then
-        return g_careerScreen.isMultiplayer or debugActive
-    end
-
-    return true
 end
 
-local STATISTICS_TOTAL = "noTrespassing.statistics#total"
+local function onFinalizeVehicleTypes(vehicleTypesManager)
 
-local NoTrespassingMod_MT = Class(NoTrespassingMod)
+end
 
-function NoTrespassingMod:new(mission, modDirectory, modName, i18n)
-    local self = setmetatable({}, NoTrespassingMod_MT)
+function delete()
+    getfenv(0)["g_noTrespassingMod"] = nil
+end
 
-    self.mission = mission
-
-    self.isServer = mission:getIsServer()
-    self.isClient = mission:getIsClient()
-
-    self.modDirectory = modDirectory
-    self.modName = modName
+local function init()
+    if g_noTrespassingMod ~= nil then
+        return
+    end
     
-    -- statistics --
-    self.statistics = { total = 0.0 }
+    getfenv(0)["g_noTrespassingMod"] = {}
+    --addModEventListener(noTrespassingMod)
 
     -- merge mod translations --
     local i18nRefGlobal = getfenv(0).g_i18n.texts
@@ -55,86 +43,12 @@ function NoTrespassingMod:new(mission, modDirectory, modName, i18n)
         i18nRefGlobal[key] = text
     end
     
-    self:loadCropsData()
-    
-    return self
+    --noTrespassingMod = NoTrespassingMod:new(mission, modDirectory, modName, g_i18n)
 end
 
-function NoTrespassingMod:delete()
-end
+init()
 
-function NoTrespassingMod:onMissionLoadFromSavegame(xmlFile)
-    if hasXMLProperty(xmlFile, NoTrespassingMod.STATISTICS_TOTAL) then
-        self.statistics.total = getXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL)
-    end
-end
-
-function NoTrespassingMod:onMissionSaveToSavegame(xmlFile)
-    setXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL, self.statistics.total)
-end
-
-function NoTrespassingMod:loadCropsData()
-    local path = Utils.getFilename("data/noTrespassing.xml", self.modDirectory)
-    if fileExists(path) then
-        local xmlFile = loadXMLFile("noTrespassing", path)
-        self:loadCropsDataFromXml(xmlFile)
-        delete(xmlFile)
-    end
-end
-
-function NoTrespassingMod:loadCropsDataFromXml(xmlFile)
-    local data = {}
-
-    data.difficulty = { 0.75, 1.0, 1.5 } -- sane defaults if xml is corrupted
-    local difficultyKey = "noTrespassing.difficulty"
-    if hasXMLProperty(xmlFile, difficultyKey) then
-        data.difficulty = { 
-            getXMLFloat(xmlFile, difficultyKey .. "#easy"), 
-            getXMLFloat(xmlFile, difficultyKey .. "#normal"), 
-            getXMLFloat(xmlFile, difficultyKey .. "#hard")
-        }
-    end
-    
-    data.ground = 1.0 -- sane defaults if xml is corrupted
-    local groundKey = "noTrespassing.ground"
-    if hasXMLProperty(xmlFile, groundKey) then
-        data.ground = getXMLFloat(xmlFile, groundKey .. "#base")
-    end
-        
-    data.crops = {} -- sane defaults if xml is corrupted
-    data.crops["BARLEY"] = {
-        base=3.70,
-        young=0.5,
-        mature=1.0,
-        harvested=0.1
-    }
-
-    local i = 0
-    while true do
-        local cropKey = string.format("noTrespassing.crops.crop(%d)", i)
-        if not hasXMLProperty(xmlFile, cropKey) then 
-            break 
-        end
-
-        local cropName = getXMLString(xmlFile, cropKey .. "#name")
-        local cropBase = getXMLFloat(xmlFile, cropKey .. "#base")
-        local cropYoung = getXMLFloat(xmlFile, cropKey .. "#young")
-        local cropMature = getXMLFloat(xmlFile, cropKey .. "#mature")
-        local cropHarvested = getXMLFloat(xmlFile, cropKey .. "#harvested")
-
-        data.crops[cropName] = {
-            base = cropBase,
-            young = cropYoung,
-            mature = cropMature,
-            harvested = cropHarvested
-        }
-
-        i = i+1
-    end
-    
-
-    self.data = data
-end
+------------------------------------------------------------------------------------------------------------------------------------------
 
 function NoTrespassingMod.installSpecializations(vehicleTypeManager, specializationManager, modDirectory, modName)
     specializationManager:addSpecialization("noTrespassing", "NoTrespassing", Utils.getFilename("NoTrespassing.lua", modDirectory), nil)
@@ -164,6 +78,8 @@ function init()
 
     VehicleTypeManager.validateVehicleTypes = Utils.prependedFunction(VehicleTypeManager.validateVehicleTypes, validateVehicleTypes)
 
+    loadCropsData()
+
 --    -- Networking
 --    SavegameSettingsEvent.readStream = Utils.appendedFunction(SavegameSettingsEvent.readStream, readStream)
 --    SavegameSettingsEvent.writeStream = Utils.appendedFunction(SavegameSettingsEvent.writeStream, writeStream)
@@ -171,6 +87,12 @@ end
 
 function loadMission(mission)
     assert(g_noTrespassingMod == nil)
+
+    -- merge mod translations --
+    local i18nRefGlobal = getfenv(0).g_i18n.texts
+    for key, text in pairs(i18n.texts) do
+        i18nRefGlobal[key] = text
+    end
 
     noTrespassingMod = NoTrespassingMod:new(mission, modDirectory, modName, g_i18n)
     getfenv(0)["g_noTrespassingMod"] = noTrespassingMod
@@ -192,30 +114,6 @@ function loadedMission(mission, node)
 --    noTrespassingMod:onMissionLoaded(mission)
 end
 
-function unload()
-    removeModEventListener(noTrespassingMod)
-
-    noTrespassingMod:delete()
-    noTrespassingMod = nil -- allow garbage collection
-    getfenv(0)["g_noTrespassingMod"] = nil
-end
-
-function saveToXMLFile(missionInfo)
-    if missionInfo.isValid then
-        local xmlFile = createXMLFile("NoTrespassingXML", missionInfo.savegameDirectory .. "/noTrespasing.xml", "noTrespassing")
-        if xmlFile ~= nil then
-            noTrespassingMod:onMissionSaveToSavegame(xmlFile) -- fil data from noTrespassingMod class instance
-            saveXMLFile(xmlFile) -- perform write to hard drive
-            delete(xmlFile)
-        end
-    end
-end
-
-function readStream(e, streamId, connection)
-end
-
-function writeStream(e, streamId, connection) 
-end
 
 -- hooks --
 function validateVehicleTypes(vehicleTypeManager)
@@ -224,6 +122,94 @@ end
 
 -- init mod --
 init()
+
+--------------------------------------------
+--        LOAD XROPS DATA FROM XML        --
+--------------------------------------------
+
+function loadCropsData()
+    local path = Utils.getFilename("data/noTrespassing.xml", modDirectory)
+    if fileExists(path) then
+        local xmlFile = loadXMLFile("noTrespassing", path)
+        local cropsData = loadCropsDataFromXml(xmlFile)
+        delete(xmlFile)
+    end
+
+    return cropsData
+end
+
+function loadCropsDataFromXml(xmlFile)
+    local data = {}
+
+    data.difficulty = { 0.75, 1.0, 1.5 } -- sane defaults if xml is corrupted
+    local difficultyKey = "noTrespassing.difficulty"
+    if hasXMLProperty(xmlFile, difficultyKey) then
+        data.difficulty = { 
+            getXMLFloat(xmlFile, difficultyKey .. "#easy"), 
+            getXMLFloat(xmlFile, difficultyKey .. "#normal"), 
+            getXMLFloat(xmlFile, difficultyKey .. "#hard")
+        }
+    end
+    
+    data.ground = 0.1 -- sane defaults if xml is corrupted
+    local groundKey = "noTrespassing.ground"
+    if hasXMLProperty(xmlFile, groundKey) then
+        data.ground = getXMLFloat(xmlFile, groundKey .. "#base")
+    end
+        
+    data.crops = {} -- sane defaults if xml is corrupted
+    data.crops["BARLEY"] = {
+        base=1.0,
+        young=0.4,
+        mature=1.0,
+        harvested=0.1
+    }
+
+    local categories = {} -- no need to store categories, use and discard for faster lookup
+    local j = 0
+    while true do
+        local categoryKey = string.format("noTrespassing.categories.category(%d)", j)
+        if not hasXMLProperty(xmlFile, categoryKey) then 
+            break 
+        end
+
+        local categoryName = getXmlString(xmlFile, categoryKey .. "#name")
+        local categoryYoung = getXMLFloat(xmlFile, categoryKey .. "#young")
+        local categoryMature = getXMLFloat(xmlFile, categoryKey .. "#mature")
+        local categoryHarvested = getXMLFloat(xmlFile, categoryKey .. "#harvested")
+
+        categories[categoryName] = {
+            young = categoryYoung,
+            mature = categoryMature,
+            harvested = categoryHarvested
+        }
+
+        j = j+1
+    end
+
+    local i = 0
+    while true do
+        local cropKey = string.format("noTrespassing.crops.crop(%d)", i)
+        if not hasXMLProperty(xmlFile, cropKey) then 
+            break 
+        end
+
+        local cropName = getXMLString(xmlFile, cropKey .. "#name")
+        local cropBase = getXMLFloat(xmlFile, cropKey .. "#base")
+        local cropCategory = getXMLString(xmlFile, cropKey .. "#category")
+
+        data.crops[cropName] = {
+            base = cropBase,
+            young = categories[cropCategory]["young"],
+            mature = categories[cropCategory]["mature"],
+            harvested = categories[cropCategory]["harvested"]
+        }
+
+        i = i+1
+    end
+    
+    return data
+end
 
 -------------------------------------------------------------------------------
 --- Extra functionality to abstract away some internal details

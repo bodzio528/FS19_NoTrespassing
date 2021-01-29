@@ -125,7 +125,7 @@ function NoTrespassing::onUpdateTick(dt, isActiveForInput, isActiveForInputIgnor
             g_currentMission:addMoney(-spec.penalty, farmId, MoneyType.TRANSFER)
 
             -- update statistics --
-            g_noTrespassingMod.statistics.total = g_noTrespassingMod.statistics.total + spec.penalty
+            --g_noTrespassingMod.statistics.total = g_noTrespassingMod.statistics.total + spec.penalty
 
             spec.penaltyCooldown = NoTrespassing.PENALTY_COOLDOWN
             spec.penalty = 0
