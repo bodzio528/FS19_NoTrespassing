@@ -34,9 +34,6 @@
         <crop name="COTTON" category="GRASS" base="1.0"/>
         <crop name="POPLAR" category="GRASS" base="1.0"/>
         <!-- horsegrass clover alfalfa pasturegrass incarasegrass miscanthus -->
-
-        <!-- weed -->
-        <crop name="WEED" category="WEEDS" base="0.0"/>
     </crops>
 
     <categories>
@@ -46,6 +43,5 @@
         <category name="NIGHTSHADE" young="0.2" mature="0.6" harvested="0.1"/>
         <category name="ROOTCROPS" young="0.2" mature="0.6" harvested="0.1"/>
         <category name="GRASS"  young="0.2" mature="0.5" harvested="0.0"/>
-        <category name="WEEDS" young="0.0" mature="0.0" harvested="0.0" />
     </categories>
 </noTrespassing>

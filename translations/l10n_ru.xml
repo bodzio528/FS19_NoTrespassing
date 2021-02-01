@@ -3,5 +3,7 @@
     <texts>
         <text name="noTrespassing_warning_penalty" text="Повреждение посевов" />
         <text name="noTrespassing_total_cost_label" text="Стоимость" />
+        <text name="noTrespassing_total_cost_notification" text="Компенсация" />
+
     </texts>
 </l10n>

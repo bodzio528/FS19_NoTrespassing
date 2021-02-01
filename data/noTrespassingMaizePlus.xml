@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<noTrespassing>
+    <!-- get higher penalty on more challenging difficulty setting -->
+    <difficulty easy="0.75" normal="1.0" hard="2.0"/>
+ 
+    <!-- driving cultivated/plowed ground, with no living plants on it -->
+    <ground base="0.3"/>
+
+    <crops>
+        <!-- cereals - pretty resistant to damage in early growth stage, take moderate damage as mature plant -->
+        <crop name="BARLEY" category="CEREALS" base="1.0"/>
+        <crop name="WHEAT" category="CEREALS" base="1.1"/>
+        <crop name="OAT" category="CEREALS" base="1.2"/>
+        <crop name="MAIZE" category="CEREALS" base="1.3"/>
+
+        <crop name="RYE" category="CEREALS" base="1.0"/>
+        <crop name="TRITICALE" category="CEREALS" base="1.0"/>
+        <crop name="SPELT" category="CEREALS" base="1.0"/>
+        
+        <!-- oilseed - very fragile in young age, mature plants are big so area of plants destroyed by vehicle is quite extensive -->
+        <crop name="CANOLA" category="OILSEEDS" base="1.5"/>
+        <crop name="SUNFLOWER" category="OILSEEDS" base="1.2"/>
+        <crop name="OILSEEDRADISH" category="OILSEEDS" base="0.3"/>
+
+        <!-- legumes - resistant to damage in early stages, take moderate damage as mature plants -->
+        <crop name="SOYBEAN" category="LEGUMES" base="1.2"/>
+        
+        <!-- nightshade - very resistant to damage in early stages, resistant to damage in mature state -->
+        <crop name="POTATO" category="NIGHTSHADE" base="1.0"/>
+        
+        <!-- rootcrops - very resistant to damage in early stages, take moderate damage as mature plants -->
+        <crop name="SUGARBEET" category="ROOTCROPS" base="1.0"/>
+
+        <crop name="ONION" category="ROOTCROPS" base="1.0"/>
+        <crop name="CARROT" category="ROOTCROPS" base="1.0"/>
+        
+        <!-- grass - resistant to damage in all growth stages -->
+        <crop name="GRASS" category="GRASS" base="0.7"/>
+        <crop name="SUGARCANE" category="GRASS" base="1.0"/>
+        <crop name="COTTON" category="GRASS" base="1.0"/>
+        <crop name="POPLAR" category="GRASS" base="1.0"/>
+
+        <crop name="ALFALFA" category="GRASS" base="0.8"/>
+        <crop name="CLOVER" category="GRASS" base="0.8"/>
+        <crop name="FIELD_GRASS" category="GRASS" base="0.7"/>
+        <crop name="HORSEGRASS" category="GRASS" base="0.7"/>
+        <crop name="INCARASE_GRASS" category="GRASS" base="0.7"/>
+        <crop name="MISCANTHUS" category="GRASS" base="0.7"/>
+        <crop name="PASTUREGRASS" category="GRASS" base="0.7"/>
+    </crops>
+
+    <categories>
+        <category name="CEREALS" young="0.4" mature="1.0" harvested="0.1" />
+        <category name="OILSEEDS" young="0.6" mature="1.2" harvested="0.1" />
+        <category name="LEGUMES" young="0.3" mature="0.8" harvested="0.1" />
+        <category name="NIGHTSHADE" young="0.2" mature="0.6" harvested="0.1"/>
+        <category name="ROOTCROPS" young="0.2" mature="1.0" harvested="0.1"/>
+        <category name="GRASS"  young="0.2" mature="0.5" harvested="0.0"/>
+    </categories>
+</noTrespassing>
