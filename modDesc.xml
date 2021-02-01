@@ -43,14 +43,14 @@ Dieser Mod bestraft die Verwendung von Verknüpfungen durch NPC-gesteuerte Felde
 
 Ten mod nakłada karę za jazdę na skróty przez pola kontrolowane przez NPC. Kara jest obliczana na podstawie:
 - rozmiaru i typu kół
-- kół, które dotykają upraw
+- kół, które mają kontakt z uprawami
 - odległośći przejechanej po uprawianej ziemi
 - rodzaj niszczonej uprawy
-- etap wzrostu uprawy
+- wzrostu uprawy
 
 Dziennik zmian 1.1.0.0:
-- Poprawka dla wielu graczy
-- Oczyszczanie kodu ogólnego
+- Poprawka dla trybu wielu graczy
+- Ogólne czyszczenie kodu
 - Dodatkowe uprawy (mod MaizePlus)
 ]]></pl>
         <fr><![CDATA[Introduire une pénalité pour la destruction des récoltes de PNJ
@@ -85,7 +85,7 @@ Journal des modifications 1.1.0.0:
 
     <iconFilename>icon.dds</iconFilename>
 
-    <multiplayer supported="false"/>
+    <multiplayer supported="true"/>
 
     <extraSourceFiles>	
         <sourceFile filename="loader.lua" /> 

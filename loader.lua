@@ -14,16 +14,14 @@ Changelog:
 2021-02-01 rewrite loader function, cleanup the code
 ]]
 
-local debugActive = true
+local debugActive = false
 
 local modName = g_currentModName
 local modDirectory = g_currentModDirectory
 local specializationName = string.format("%s.noTrespassing", modName)
 
 function onStartMission(mission)
-    print(modName .. ":onStartMission()")
-
-    print(string.format("%s:onStartMission(): I WONDER g_noTrespassing IS PRESENT = %s", modName, tostring(g_noTrespassing ~= nil)))
+    --print(modName .. ":onStartMission()")
 
     if g_noTrespassing ~= nil then
         local path = Utils.getFilename("data/noTrespassingMaizePlus.xml", modDirectory)
@@ -35,7 +33,7 @@ function onStartMission(mission)
 end
 
 function finalizeVehicleTypes(vehicleTypesManager)
-    print(modName .. ":finalizeVehicleTypes()")
+    --print(modName .. ":finalizeVehicleTypes()")
 
     local numInserted = 0
 
@@ -46,10 +44,6 @@ function finalizeVehicleTypes(vehicleTypesManager)
                 if specializationObject.prerequisitesPresent(typeEntry.specializations) then
                     g_vehicleTypeManager:addSpecialization(typeName, specializationName)
                     numInserted = numInserted + 1
-
-                    if debugActive then
-                        print(string.format("%s: Specialization '%s' added to %s (%d)", modName, specializationName, typeName, numInserted))
-                    end
                 end
             end
         end
@@ -61,13 +55,13 @@ function finalizeVehicleTypes(vehicleTypesManager)
 end
 
 function delete()
-    print(modName .. ".delete()")
+    --print(modName .. ".delete()")
 
     getfenv(0)["g_noTrespassing"] = nil
 end
 
 function init()
-    print(modName .. ".init()")
+    --print(modName .. ".init()")
 
     if g_noTrespassing ~= nil then 
         return 
@@ -89,7 +83,7 @@ init()
 --------------------------------------------
 
 function loadCropsData(path)
-    print(modName .. ":loadCropsData() path = " .. path)
+    --print(modName .. ":loadCropsData() path = " .. path)
 
     if fileExists(path) then
         local xmlFile = loadXMLFile("noTrespassing", path)
@@ -99,7 +93,7 @@ function loadCropsData(path)
 end
 
 function loadCropsDataFromXml(xmlFile)
-    print(modName .. ":loadCropsDataFromXml()")
+    --print(modName .. ":loadCropsDataFromXml()")
 
     -- provide sane defaults if xml is corrupted --
     local data = { 

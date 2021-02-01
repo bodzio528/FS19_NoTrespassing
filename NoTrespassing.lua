@@ -26,7 +26,7 @@ NoTrespassing.KPH_TO_MPS = 0.28
 
 NoTrespassing.PAYMENT_UNIT = 250
 
-NoTrespassing.NDEBUG = 0 -- 1 = chatty; 2 = talkative
+NoTrespassing.NDEBUG = 0 -- 0 = mute; 1 = chatty; 2 = talkative
 
 -- sincere apologies to everyone reading this :(
 g_noTrespassing = getfenv(0)["g_noTrespassing"]
