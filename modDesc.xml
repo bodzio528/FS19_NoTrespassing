@@ -4,7 +4,7 @@
     <version>1.1.0.0</version>
     <title>
         <en>Player Pays For Crop Destruction</en>
-        <de>Spieler Muss für Fruchtzerstörung Bezahlen</de>
+        <de>Spieler Muss Für Fruchtzerstörung Bezahlen</de>
         <pl>Zapłać Za Zniszczone Plony</pl>
         <fr>Pénalité Pour La Destruction Des Récoltes</fr>
         <es>Penalización Por Destruir Cultivos</es>
@@ -20,7 +20,7 @@ This mod penalizes taking shortcuts trough NPC-controlled fields. Penalty is cal
 - crop growth stage
 
 Changelog 1.1.0.0:
-- Multiplayer fix
+- Multiplayer support introduced
 - Genaral code cleanup
 - Additional crops (MaizePlus mod)
 ]]></en>
@@ -49,7 +49,7 @@ Ten mod nakłada karę za jazdę na skróty przez pola kontrolowane przez NPC. K
 - wzrostu uprawy
 
 Dziennik zmian 1.1.0.0:
-- Poprawka dla trybu wielu graczy
+- Wsparcie dla trybu wieloosobowego
 - Ogólne czyszczenie kodu
 - Dodatkowe uprawy (mod MaizePlus)
 ]]></pl>

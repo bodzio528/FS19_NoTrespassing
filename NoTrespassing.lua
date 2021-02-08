@@ -24,7 +24,7 @@ NoTrespassing.NOTIFICATION_DISPLAY_TIME = 8000.0
 NoTrespassing.AREA_COEFFICIENT = 1.0 / 1024.0 -- this constant holds average real-world area to in-game units conversion (23355.5)
 NoTrespassing.KPH_TO_MPS = 0.28
 
-NoTrespassing.PAYMENT_UNIT = 250
+NoTrespassing.PAYMENT_UNIT = 100
 
 NoTrespassing.NDEBUG = 0 -- 0 = mute; 1 = chatty; 2 = talkative
 
@@ -99,7 +99,7 @@ function NoTrespassing:onUpdateTick(dt, isActiveForInput, isActiveForInputIgnore
                                        math.floor(spec.visiblePenalty))
             g_currentMission:showBlinkingWarning(text, NoTrespassing.WARNING_DISPLAY_TIME)
         else
-            if spec.visiblePenalty > 0 then
+            if spec.visiblePenalty > 1 then
                 g_currentMission.hud:addSideNotification({0.9375, 0.9, 0.546875, 1}, string.format("%s -%d", g_i18n:getText("noTrespassing_total_cost_notification"), spec.visiblePenalty), NoTrespassing.NOTIFICATION_DISPLAY_TIME)
             end
 
@@ -110,9 +110,9 @@ function NoTrespassing:onUpdateTick(dt, isActiveForInput, isActiveForInputIgnore
     if self.isServer then
         -- call deduce penalty from bank account --
         if spec.penalty > NoTrespassing.PAYMENT_UNIT then
-            local farmId = self:getOwnerFarmId() 
-            local stats = g_farmManager:getFarmById(g_currentMission.player.farmId).stats 
-            stats:updateStats("expenses", spec.penalty) 
+            local farmId = self:getOwnerFarmId()
+            local stats = g_farmManager:getFarmById(g_currentMission.player.farmId).stats
+            stats:updateStats("expenses", spec.penalty)
             g_currentMission:addMoney(-spec.penalty, farmId, MoneyType.TRANSFER)
 
             spec.penalty = 0
@@ -143,7 +143,7 @@ function getPenalty(vehicle, dt)
                 -- drop procedure for owned fields --
                 return 0
             end
-            
+
             if g_fieldManager.farmlandIdFieldMapping == nil or g_fieldManager.farmlandIdFieldMapping[farmlandId] == nil then
                 -- error on Wola Brudnowska map --
                 return 0
@@ -185,7 +185,7 @@ function getTyreDamage(x0, z0, width)
     -- todo: handle crawlers, get additional attached wheels etc. --
     local t = width/4
     FSDensityMapUtil.updateWheelDestructionArea(x0-t,z0-t, x0,z0+t, x0+t,z0)
-    
+
     return width
 end
 
@@ -200,37 +200,49 @@ function getCropDamage(x, z)
             local area, totalArea, _ = modifier:executeGet()
             if area > 0 then
                 local state = area / totalArea
-    
-                if NoTrespassing.NDEBUG > 1 then
-                    print(string.format("FRUIT = %s STATE = %f ", fruitDesc.name, state))
-                end
-
-                -- GROUND = (state >= fruitDesc.destruction.state[10]) --
-                if  state >= fruitDesc.destruction.state then
+                                
+                -- GROUND = (state >= fruitDesc.destruction.state[9..10]) --
+                if fruitDesc.destruction.state <= state then
                     return g_noTrespassing.data.ground
                 end
-
+                
                 -- load default (BARLEY) if damage data could not be found in config --
                 local coeffs = g_noTrespassing.data.crops[fruitDesc.name]
                 if coeffs == nil then
                     coeffs = g_noTrespassing.data.crops["BARLEY"]
                 end
 
-                --- YOUNG = (state <= youngPlantMaxState[4])
-                if state <= fruitDesc.youngPlantMaxState then
-                    return coeffs["base"] * coeffs["young"]
-                end
-                
-                -- MATURE = (maturePlantMinState[5] <= state < cutState[8])
-                if fruitDesc.maturePlantMinState <= state and state < fruitDesc.cutState then
-                    return 64 * coeffs["base"] * coeffs["mature"]
-                end
+                if g_seasons ~= nil then
+                    --- YOUNG = (state <= youngPlantMaxState[4])
+                    if state <= fruitDesc.youngPlantMaxState then
+                        return coeffs["base"] * coeffs["young"]
+                    end
 
-                -- CUT = (cutState[8] <= state < fruitDesc.destruction.state[10])
-                if fruitDesc.cutState <= state and state < fruitDesc.destruction.state then
-                    return coeffs["harvested"]
-                end
+                    -- MATURE = (maturePlantMinState[5] <= state < cutState[8])
+                    if fruitDesc.maturePlantMinState <= state and state < fruitDesc.cutState then
+                        return 16 * coeffs["base"] * coeffs["mature"]
+                    end
 
+                    -- CUT = (cutState[8] <= state < fruitDesc.destruction.state[10])
+                    if fruitDesc.cutState <= state then
+                        return coeffs["harvested"]
+                    end
+                else
+                    --- YOUNG = (state < minHarvestingGrowthState[4])
+                    if state < fruitDesc.minHarvestingGrowthState then
+                        return coeffs["base"] * coeffs["young"]
+                    end
+
+                    -- MATURE = (minHarvestingGrowthState[4] <= state < cutState[8])
+                    if fruitDesc.minHarvestingGrowthState <= state and state < fruitDesc.cutState then
+                        return 16 * coeffs["base"] * coeffs["mature"]
+                    end
+
+                    -- CUT = (cutState[8] <= state < fruitDesc.destruction.state[9])
+                    if fruitDesc.cutState <= state then
+                        return coeffs["harvested"]
+                    end
+                end
             end
         end
     end
