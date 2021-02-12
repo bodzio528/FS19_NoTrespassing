@@ -11,81 +11,106 @@ Created: 2020-12-22
 Changelog:
 2020-12-22 initial version
 2020-12-28 merge with register function file
-2021-01-30 rewrite loader function, cleanup the code
+2021-02-01 rewrite loader function, cleanup the code
 ]]
 
 local debugActive = false
 
 local modName = g_currentModName
 local modDirectory = g_currentModDirectory
+local specializationName = string.format("%s.noTrespassing", modName)
 
-local function getIsMultiplayerGame()
-    if g_dedicatedServerInfo ~= nil then
-        return true
+function onStartMission(mission)
+    --print(modName .. ":onStartMission()")
+
+    if g_noTrespassing ~= nil then
+        local path = Utils.getFilename("data/noTrespassingMaizePlus.xml", modDirectory)
+        loadCropsData(path)
     end
 
-    if g_careerScreen ~= nil then
-        return g_careerScreen.isMultiplayer or debugActive
+    --local modSettingsPath = Utils.getFilename("noTrespassing.xml", modSettingsDir)
+    --TODO: override with modSettingsPath
+end
+
+function finalizeVehicleTypes(vehicleTypesManager)
+    --print(modName .. ":finalizeVehicleTypes()")
+
+    local numInserted = 0
+
+    if specializationName ~= nil then
+        local specializationObject = g_specializationManager:getSpecializationObjectByName(specializationName)
+        if specializationObject ~= nil then
+            for typeName, typeEntry in pairs(g_vehicleTypeManager.vehicleTypes) do
+                if specializationObject.prerequisitesPresent(typeEntry.specializations) then
+                    g_vehicleTypeManager:addSpecialization(typeName, specializationName)
+                    numInserted = numInserted + 1
+                end
+            end
+        end
     end
 
-    return true
-end
-
-local STATISTICS_TOTAL = "noTrespassing.statistics#total"
-
-local NoTrespassingMod_MT = Class(NoTrespassingMod)
-
-function NoTrespassingMod:new(mission, modDirectory, modName, i18n)
-    local self = setmetatable({}, NoTrespassingMod_MT)
-
-    self.mission = mission
-
-    self.isServer = mission:getIsServer()
-    self.isClient = mission:getIsClient()
-
-    self.modDirectory = modDirectory
-    self.modName = modName
-    
-    -- statistics --
-    self.statistics = { total = 0.0 }
-
-    -- merge mod translations --
-    local i18nRefGlobal = getfenv(0).g_i18n.texts
-    for key, text in pairs(i18n.texts) do
-        i18nRefGlobal[key] = text
-    end
-    
-    self:loadCropsData()
-    
-    return self
-end
-
-function NoTrespassingMod:delete()
-end
-
-function NoTrespassingMod:onMissionLoadFromSavegame(xmlFile)
-    if hasXMLProperty(xmlFile, NoTrespassingMod.STATISTICS_TOTAL) then
-        self.statistics.total = getXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL)
+    if debugActive then
+        print(string.format("%s: Specialization '%s' added to %d vehicle types.", modName, specializationName, numInserted))
     end
 end
 
-function NoTrespassingMod:onMissionSaveToSavegame(xmlFile)
-    setXMLFloat(xmlFile, NoTrespassingMod.STATISTICS_TOTAL, self.statistics.total)
+function delete()
+    --print(modName .. ".delete()")
+
+    getfenv(0)["g_noTrespassing"] = nil
 end
 
-function NoTrespassingMod:loadCropsData()
-    local path = Utils.getFilename("data/noTrespassing.xml", self.modDirectory)
+function init()
+    --print(modName .. ".init()")
+
+    if g_noTrespassing ~= nil then 
+        return 
+    end
+
+    getfenv(0)["g_noTrespassing"] = {}
+
+    g_specializationManager:addSpecialization("noTrespassing", "NoTrespassing", Utils.getFilename("NoTrespassing.lua", modDirectory), nil)
+
+    FSBaseMission.delete = Utils.appendedFunction(FSBaseMission.delete, delete)
+    Mission00.onStartMission = Utils.appendedFunction(Mission00.onStartMission, onStartMission)
+    VehicleTypeManager.finalizeVehicleTypes = Utils.prependedFunction(VehicleTypeManager.finalizeVehicleTypes, finalizeVehicleTypes)
+end
+
+init()
+
+--------------------------------------------
+--        LOAD XROPS DATA FROM XML        --
+--------------------------------------------
+
+function loadCropsData(path)
+    --print(modName .. ":loadCropsData() path = " .. path)
+
     if fileExists(path) then
         local xmlFile = loadXMLFile("noTrespassing", path)
-        self:loadCropsDataFromXml(xmlFile)
+        loadCropsDataFromXml(xmlFile)
         delete(xmlFile)
     end
 end
 
-function NoTrespassingMod:loadCropsDataFromXml(xmlFile)
-    local data = {}
+function loadCropsDataFromXml(xmlFile)
+    --print(modName .. ":loadCropsDataFromXml()")
 
-    data.difficulty = { 0.75, 1.0, 1.5 } -- sane defaults if xml is corrupted
+    -- provide sane defaults if xml is corrupted --
+    local data = { 
+        difficulty = { 0.75, 1.0, 1.5 },
+        ground = 0.1,
+        crops = {
+            BARLEY  = {
+                base=1.0,
+                young=0.4,
+                mature=1.0,
+                harvested=0.1
+            }
+        }
+    }
+
+    -- start reading XML --
+
     local difficultyKey = "noTrespassing.difficulty"
     if hasXMLProperty(xmlFile, difficultyKey) then
         data.difficulty = { 
@@ -94,20 +119,34 @@ function NoTrespassingMod:loadCropsDataFromXml(xmlFile)
             getXMLFloat(xmlFile, difficultyKey .. "#hard")
         }
     end
-    
-    data.ground = 1.0 -- sane defaults if xml is corrupted
+
     local groundKey = "noTrespassing.ground"
     if hasXMLProperty(xmlFile, groundKey) then
         data.ground = getXMLFloat(xmlFile, groundKey .. "#base")
     end
-        
-    data.crops = {} -- sane defaults if xml is corrupted
-    data.crops["BARLEY"] = {
-        base=3.70,
-        young=0.5,
-        mature=1.0,
-        harvested=0.1
-    }
+
+    -- no need to store categories, merge with crop data for faster lookup
+    local categories = { CEREALS  = {young = 0.2, mature=1.0, harvested=0.1}} -- sane defaults if xml is corrupted
+    local j = 0
+    while true do
+        local categoryKey = string.format("noTrespassing.categories.category(%d)", j)
+        if not hasXMLProperty(xmlFile, categoryKey) then 
+            break 
+        end
+
+        local categoryName = getXMLString(xmlFile, categoryKey .. "#name")
+        local categoryYoung = getXMLFloat(xmlFile, categoryKey .. "#young")
+        local categoryMature = getXMLFloat(xmlFile, categoryKey .. "#mature")
+        local categoryHarvested = getXMLFloat(xmlFile, categoryKey .. "#harvested")
+
+        categories[categoryName] = {
+            young = categoryYoung,
+            mature = categoryMature,
+            harvested = categoryHarvested
+        }
+
+        j = j+1
+    end
 
     local i = 0
     while true do
@@ -118,112 +157,25 @@ function NoTrespassingMod:loadCropsDataFromXml(xmlFile)
 
         local cropName = getXMLString(xmlFile, cropKey .. "#name")
         local cropBase = getXMLFloat(xmlFile, cropKey .. "#base")
-        local cropYoung = getXMLFloat(xmlFile, cropKey .. "#young")
-        local cropMature = getXMLFloat(xmlFile, cropKey .. "#mature")
-        local cropHarvested = getXMLFloat(xmlFile, cropKey .. "#harvested")
+
+        local cropCategory = getXMLString(xmlFile, cropKey .. "#category")
+        if cropCategory == nil then
+            cropCategory = "CEREALS"
+        end
 
         data.crops[cropName] = {
             base = cropBase,
-            young = cropYoung,
-            mature = cropMature,
-            harvested = cropHarvested
+            young = categories[cropCategory]["young"],
+            mature = categories[cropCategory]["mature"],
+            harvested = categories[cropCategory]["harvested"]
         }
 
         i = i+1
     end
     
-
-    self.data = data
+    getfenv(0)["g_noTrespassing"] = {}
+    g_noTrespassing.data = data
 end
-
-function NoTrespassingMod.installSpecializations(vehicleTypeManager, specializationManager, modDirectory, modName)
-    specializationManager:addSpecialization("noTrespassing", "NoTrespassing", Utils.getFilename("NoTrespassing.lua", modDirectory), nil)
-
-    for vehicleName, vehicleType in pairs(vehicleTypeManager:getVehicleTypes()) do
-        local isDrivable = SpecializationUtil.hasSpecialization(Drivable, vehicleType.specializations)
-        local isEnterable = SpecializationUtil.hasSpecialization(Enterable, vehicleType.specializations)
-        local isMotorized = SpecializationUtil.hasSpecialization(Motorized, vehicleType.specializations)
-        local isSplineVehicle = SpecializationUtil.hasSpecialization(SplineVehicle, vehicleType.specializations)
-            
-        if isDrivable and isEnterable and isMotorized and not isSplineVehicle then
-            vehicleTypeManager:addSpecialization(vehicleName, modName .. ".noTrespassing")
-        end
-    end
-end
-
--------------------------------------------------------------------------------
--- register NoTrespassing as available mod
--------------------------------------------------------------------------------
-function init()
-    FSBaseMission.delete = Utils.appendedFunction(FSBaseMission.delete, unload)
-
-    Mission00.load = Utils.prependedFunction(Mission00.load, loadMission)
-    Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, loadedMission)
-
-    FSCareerMissionInfo.saveToXMLFile = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile, saveToXMLFile)
-
-    VehicleTypeManager.validateVehicleTypes = Utils.prependedFunction(VehicleTypeManager.validateVehicleTypes, validateVehicleTypes)
-
---    -- Networking
---    SavegameSettingsEvent.readStream = Utils.appendedFunction(SavegameSettingsEvent.readStream, readStream)
---    SavegameSettingsEvent.writeStream = Utils.appendedFunction(SavegameSettingsEvent.writeStream, writeStream)
-end
-
-function loadMission(mission)
-    assert(g_noTrespassingMod == nil)
-
-    noTrespassingMod = NoTrespassingMod:new(mission, modDirectory, modName, g_i18n)
-    getfenv(0)["g_noTrespassingMod"] = noTrespassingMod
-    addModEventListener(noTrespassingMod)
-end
-
-function loadedMission(mission, node)
-    if mission:getIsServer() then
-        if mission.missionInfo.savegameDirectory ~= nil and fileExists(mission.missionInfo.savegameDirectory .. "/noTrespasing.xml") then
-            local xmlFile = loadXMLFile("NoTrespassingXML", mission.missionInfo.savegameDirectory .. "/noTrespasing.xml")
-            if xmlFile ~= nil then
-                noTrespassingMod:onMissionLoadFromSavegame(xmlFile)
-                delete(xmlFile)
-            end
-        end
-    end
-
-    if mission.cancelLoading then return end
---    noTrespassingMod:onMissionLoaded(mission)
-end
-
-function unload()
-    removeModEventListener(noTrespassingMod)
-
-    noTrespassingMod:delete()
-    noTrespassingMod = nil -- allow garbage collection
-    getfenv(0)["g_noTrespassingMod"] = nil
-end
-
-function saveToXMLFile(missionInfo)
-    if missionInfo.isValid then
-        local xmlFile = createXMLFile("NoTrespassingXML", missionInfo.savegameDirectory .. "/noTrespasing.xml", "noTrespassing")
-        if xmlFile ~= nil then
-            noTrespassingMod:onMissionSaveToSavegame(xmlFile) -- fil data from noTrespassingMod class instance
-            saveXMLFile(xmlFile) -- perform write to hard drive
-            delete(xmlFile)
-        end
-    end
-end
-
-function readStream(e, streamId, connection)
-end
-
-function writeStream(e, streamId, connection) 
-end
-
--- hooks --
-function validateVehicleTypes(vehicleTypeManager)
-    NoTrespassingMod.installSpecializations(g_vehicleTypeManager, g_specializationManager, modDirectory, modName)
-end
-
--- init mod --
-init()
 
 -------------------------------------------------------------------------------
 --- Extra functionality to abstract away some internal details

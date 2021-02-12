@@ -3,5 +3,6 @@
     <texts>
         <text name="noTrespassing_warning_penalty" text="Die Ernten wurden zerstört" />
         <text name="noTrespassing_total_cost_label" text="Rückvergütung" />
+        <text name="noTrespassing_total_cost_notification" text="Rückvergütung" />
     </texts>
 </l10n>
