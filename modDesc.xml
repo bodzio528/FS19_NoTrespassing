@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="53">
     <author>Bodzio528 / Triple F</author>
-    <version>1.1.0.0</version>
+    <version>1.1.0.1</version>
     <title>
         <en>Player Pays For Crop Destruction</en>
         <de>Spieler Muss Für Fruchtzerstörung Bezahlen</de>
@@ -23,6 +23,9 @@ Changelog 1.1.0.0:
 - Multiplayer support introduced
 - Genaral code cleanup
 - Additional crops (MaizePlus mod)
+
+Hotfix:
+- (1.1.0.1) Dedicated server issue fixed
 ]]></en>
         <de><![CDATA[Führen Sie eine Strafe für die Zerstörung der Ernte durch den NPC ein
 
@@ -38,6 +41,8 @@ Dieser Mod bestraft die Verwendung von Verknüpfungen durch NPC-gesteuerte Felde
 - Bereinigung des Genaral-Codes
 - Zusätzliche Pflanzen (MaizePlus mod)
 
+Hotfix:
+- (1.1.0.1) Dedicated Server Problem behoben
 ]]></de>
         <pl><![CDATA[Koniec z bezkarnym zajeżdżaniem pola sąsiada. Zepsułeś? Zapłacisz - od razu.
 
@@ -48,10 +53,13 @@ Ten mod nakłada karę za jazdę na skróty przez pola kontrolowane przez NPC. K
 - rodzaj niszczonej uprawy
 - wzrostu uprawy
 
-Dziennik zmian 1.1.0.0:
+Zmiany 1.1.0.0:
 - Wsparcie dla trybu wieloosobowego
 - Ogólne czyszczenie kodu
 - Dodatkowe uprawy (mod MaizePlus)
+
+Poprawki:
+- (1.1.0.1) Usunięto problem z serwerem dedykowanym 
 ]]></pl>
         <fr><![CDATA[Introduire une pénalité pour la destruction des récoltes de PNJ
 
@@ -66,6 +74,9 @@ Journal des modifications 1.1.0.0:
 - Correction multijoueur
 - Nettoyage du code général
 - Cultures supplémentaires (mod MaizePlus)
+
+Correctifs:
+- (1.1.0.1) Problème de serveur dédié résolu 
 ]]></fr>
         <ru><![CDATA[Ввести штраф за уничтожение посевов
 
@@ -80,6 +91,9 @@ Journal des modifications 1.1.0.0:
 - Исправление многопользовательской игры
 - Очистка общего кода
 - Дополнительные посевы (мод MaizePlus)
+
+Исправления:
+- (1.1.0.1) Исправлена проблема с выделенным сервером.
 ]]></ru>
     </description>
 

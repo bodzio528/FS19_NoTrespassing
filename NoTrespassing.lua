@@ -52,21 +52,21 @@ function NoTrespassing:onLoad(savegame)
 end
 
 function NoTrespassing:onReadStream(streamId, connection)
-    if NoTrespassnig.NDEBUG > 0 then
-        print(string.format("NoTrespassing:onReadStream(streamId=%s, connection=%s) penalty -> %f", tostring(streamId), tostring(connection), spec.penalty))
-    end
-
     local spec = Vehicle:getNoTrespassingSpec()
     spec.penalty = streamReadFloat32(streamId)
+    
+    if NoTrespassing.NDEBUG > 0 then
+        print(string.format("NoTrespassing:onReadStream(streamId=%s, connection=%s) penalty -> %f", tostring(streamId), tostring(connection), spec.penalty))
+    end
 end
 
 function NoTrespassing:onWriteStream(streamId, connection)
-    if NoTrespassnig.NDEBUG > 0 then
-        print(string.format("NoTrespassing:onWriteStream(streamId=%s, connection=%s) penalty <- %f", tostring(streamId), tostring(connection), spec.penalty))
-    end
-
     local spec = Vehicle:getNoTrespassingSpec()
     streamWriteFloat32(streamId, spec.penalty)
+    
+    if NoTrespassing.NDEBUG > 0 then
+        print(string.format("NoTrespassing:onWriteStream(streamId=%s, connection=%s) penalty <- %f", tostring(streamId), tostring(connection), spec.penalty))
+    end
 end
 
 function NoTrespassing:onUpdateTick(dt, isActiveForInput, isActiveForInputIgnoreSelection, isSelected)
